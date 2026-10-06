@@ -30,6 +30,7 @@
 - 🎮 **游戏开发** — 用 Godot / GDScript 参加 GGJ 2026，做过完整的小游戏原型
 - 📱 **移动端** — Kotlin 写过 Android 插件，喜欢折腾逆向与抓包小工具
 - 🎨 **可视化 & 前端** — ECharts Markdown 阅读器、AI 生图科普站
+- 🎧 **音乐 & 视频** — 网易云音乐人 [歌瑞沫拉菌](https://music.163.com/#/artist?id=49513294)，做 Bootleg / Remix；B 站 [Gorilla_Kev](https://space.bilibili.com/182698016) 随缘更新
 - 🌱 **正在学** — 更多模型推理优化、更顺手的自动化工作流
 
 <!-- 💡 想改自我介绍？直接改上面的 emoji 列表；想加联系方式就往「来找我玩」里加一行 -->
@@ -120,6 +121,20 @@
 
 <br/>
 
+## 🎬 除了代码之外
+
+<div align="center">
+
+| 📺 **B 站 · Gorilla_Kev** | 🎵 **网易云音乐人 · 歌瑞沫拉菌** |
+| :--- | :--- |
+| 废柴大学生，随缘更新 | Bootleg / Remix / 电子 |
+| <img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.bilibili.com%2Fx%2Fweb-interface%2Fcard%3Fmid%3D182698016%26photo%3Dfalse&query=%24.data.follower&label=Bilibili%20%E7%B2%89%E4%B8%9D&color=00A1D6&style=flat-square&logo=bilibili&logoColor=white" alt="bilibili fans"/> <img src="https://img.shields.io/badge/%E7%A8%BF%E4%BB%B6-21-00A1D6?style=flat-square&logo=bilibili&logoColor=white" alt="bilibili videos"/> | 白金之星处刑曲 Bootleg · 夜に駆ける-群青 Bootleg · END OF TIME Bootleg |
+| [去逛逛 →](https://space.bilibili.com/182698016) | [去听听 →](https://music.163.com/#/artist?id=49513294) |
+
+</div>
+
+<br/>
+
 ## 🐍 贡献足迹
 
 <div align="center">
@@ -134,9 +149,10 @@
 
 <div align="center">
 
-<img src="https://img.shields.io/badge/GitHub-Gorilla--Kevv-181717?style=for-the-badge&logo=github&logoColor=white"/>
-<img src="https://img.shields.io/badge/Email-%E5%86%99%E5%9C%A8%E8%BF%99%E5%84%BF-FF6B6B?style=for-the-badge&logo=gmail&logoColor=white"/>
-<img src="https://img.shields.io/badge/%E5%9C%B0%E7%90%83-%E4%B8%AD%E5%9B%BD-4D96FF?style=for-the-badge&logo=mapbox&logoColor=white"/>
+[![GitHub](https://img.shields.io/badge/GitHub-Gorilla--Kevv-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Gorilla-Kevv)
+[![Bilibili](https://img.shields.io/badge/Bilibili-Gorilla__Kev-00A1D6?style=for-the-badge&logo=bilibili&logoColor=white)](https://space.bilibili.com/182698016)
+[![NetEase](https://img.shields.io/badge/%E7%BD%91%E6%98%93%E4%BA%91%E9%9F%B3%E4%B9%90%E4%BA%BA-%E6%AD%8C%E7%91%9E%E6%B2%AB%E6%8B%89%E8%8F%8C-C20C0C?style=for-the-badge&logo=neteasecloudmusic&logoColor=white)](https://music.163.com/#/artist?id=49513294)
+[![Email](https://img.shields.io/badge/Email-%E5%86%99%E5%9C%A8%E8%BF%99%E5%84%BF-FF6B6B?style=for-the-badge&logo=gmail&logoColor=white)](https://github.com/Gorilla-Kevv)
 
 <br/><br/>
 
