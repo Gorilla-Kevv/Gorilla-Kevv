@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/banner.svg" width="100%" alt="banner"/>
+<img src="assets/banner-stage-v2.svg" width="100%" alt="banner"/>
 
 # 🦍 Hi 你好呀，我是 Gorilla Kev 👋
 
