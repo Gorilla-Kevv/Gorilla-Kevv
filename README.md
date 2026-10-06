@@ -125,8 +125,9 @@
 
 <div align="center">
 
-| 📺 **B 站 · Gorilla_Kev** | 🎵 **网易云音乐人 · 歌瑞沫拉菌** |
+| <img src="assets/avatar-bilibili.svg" width="88" alt="bilibili avatar"/> | <img src="assets/avatar-netease.svg" width="88" alt="netease avatar"/> |
 | :--- | :--- |
+| 📺 **B 站 · Gorilla_Kev** | 🎵 **网易云音乐人 · 歌瑞沫拉菌** |
 | 废柴大学生，随缘更新 | Bootleg / Remix / 电子 |
 | <img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.bilibili.com%2Fx%2Fweb-interface%2Fcard%3Fmid%3D182698016%26photo%3Dfalse&query=%24.data.follower&label=Bilibili%20%E7%B2%89%E4%B8%9D&color=00A1D6&style=flat-square&logo=bilibili&logoColor=white" alt="bilibili fans"/> <img src="https://img.shields.io/badge/%E7%A8%BF%E4%BB%B6-21-00A1D6?style=flat-square&logo=bilibili&logoColor=white" alt="bilibili videos"/> | 白金之星处刑曲 Bootleg · 夜に駆ける-群青 Bootleg · END OF TIME Bootleg |
 | [去逛逛 →](https://space.bilibili.com/182698016) | [去听听 →](https://music.163.com/#/artist?id=49513294) |
