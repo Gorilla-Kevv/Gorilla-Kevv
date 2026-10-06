@@ -1,0 +1,31 @@
+name: Generate Contribution Snake
+
+on:
+  schedule:
+    - cron: "0 18 * * *"
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate snake
+        uses: Platane/snk/svg-only@v3
+        with:
+          github_user_name: Gorilla-Kevv
+          outputs: dist/github-contribution-grid-snake.svg?palette=github-light&color_snake=FF6B6B&color_dots=FFE7A3,FFB6C9,A7D8FF,9BE89F,FFD93D
+
+      - name: Commit snake
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "🐍 update contribution snake"
+          file_pattern: dist/*.svg

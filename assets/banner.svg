@@ -1,0 +1,149 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 260" width="900" height="260" role="img" aria-label="Cute illustration banner">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0.55" y2="1">
+      <stop offset="0%" stop-color="#FFE7A3"/>
+      <stop offset="38%" stop-color="#FFB6C9"/>
+      <stop offset="100%" stop-color="#A7D8FF"/>
+    </linearGradient>
+    <linearGradient id="hillFar" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#9BE89F"/>
+      <stop offset="100%" stop-color="#6BCB77"/>
+    </linearGradient>
+    <linearGradient id="hillMid" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7ED957"/>
+      <stop offset="100%" stop-color="#3FA34D"/>
+    </linearGradient>
+    <linearGradient id="hillNear" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFD36E"/>
+      <stop offset="100%" stop-color="#FFB627"/>
+    </linearGradient>
+    <clipPath id="frame">
+      <rect x="0" y="0" width="900" height="260" rx="26"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#frame)">
+    <rect x="0" y="0" width="900" height="260" fill="url(#sky)"/>
+
+    <!-- 太阳 -->
+    <g transform="translate(752,68)">
+      <g>
+        <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="48s" repeatCount="indefinite"/>
+        <g fill="#FFD93D" opacity="0.9">
+          <rect x="-4" y="-56" width="8" height="18" rx="4" transform="rotate(0)"/>
+          <rect x="-4" y="-56" width="8" height="18" rx="4" transform="rotate(45)"/>
+          <rect x="-4" y="-56" width="8" height="18" rx="4" transform="rotate(90)"/>
+          <rect x="-4" y="-56" width="8" height="18" rx="4" transform="rotate(135)"/>
+          <rect x="-4" y="-56" width="8" height="18" rx="4" transform="rotate(180)"/>
+          <rect x="-4" y="-56" width="8" height="18" rx="4" transform="rotate(225)"/>
+          <rect x="-4" y="-56" width="8" height="18" rx="4" transform="rotate(270)"/>
+          <rect x="-4" y="-56" width="8" height="18" rx="4" transform="rotate(315)"/>
+        </g>
+      </g>
+      <circle r="32" fill="#FFC12E"/>
+      <circle r="25" fill="#FFE7A3"/>
+      <circle cx="-9" cy="-6" r="4" fill="#FFFFFF" opacity="0.75"/>
+    </g>
+
+    <!-- 云朵 -->
+    <g fill="#FFFFFF" opacity="0.95">
+      <g transform="translate(130,72)">
+        <g>
+          <animateTransform attributeName="transform" type="translate" values="0 0; 46 0; 0 0" dur="16s" repeatCount="indefinite"/>
+          <ellipse cx="0" cy="0" rx="36" ry="21"/>
+          <ellipse cx="28" cy="7" rx="26" ry="15"/>
+          <ellipse cx="-28" cy="8" rx="24" ry="14"/>
+          <rect x="-52" y="4" width="104" height="18" rx="9"/>
+        </g>
+      </g>
+    </g>
+    <g fill="#FFFFFF" opacity="0.85">
+      <g transform="translate(430,44)">
+        <g>
+          <animateTransform attributeName="transform" type="translate" values="0 0; -34 0; 0 0" dur="21s" repeatCount="indefinite"/>
+          <ellipse cx="0" cy="0" rx="28" ry="16"/>
+          <ellipse cx="22" cy="6" rx="20" ry="12"/>
+          <ellipse cx="-22" cy="6" rx="18" ry="11"/>
+          <rect x="-40" y="3" width="80" height="14" rx="7"/>
+        </g>
+      </g>
+    </g>
+    <g fill="#FFFFFF" opacity="0.7">
+      <g transform="translate(660,120)">
+        <g>
+          <animateTransform attributeName="transform" type="translate" values="0 0; 28 0; 0 0" dur="13s" repeatCount="indefinite"/>
+          <ellipse cx="0" cy="0" rx="22" ry="12"/>
+          <ellipse cx="17" cy="5" rx="15" ry="9"/>
+          <ellipse cx="-17" cy="5" rx="14" ry="8"/>
+          <rect x="-31" y="2" width="62" height="11" rx="5.5"/>
+        </g>
+      </g>
+    </g>
+
+    <!-- 小鸟 -->
+    <g stroke="#6B5B73" stroke-width="2.6" fill="none" stroke-linecap="round" opacity="0.7">
+      <g transform="translate(200,110)">
+        <g>
+          <animateTransform attributeName="transform" type="translate" values="0 0; 120 -14; 240 0" dur="22s" repeatCount="indefinite"/>
+          <path d="M0,0 q7,-7 14,0 q7,-7 14,0"/>
+          <path d="M42,-10 q6,-6 12,0 q6,-6 12,0"/>
+        </g>
+      </g>
+    </g>
+
+    <!-- 闪烁星星 -->
+    <g fill="#FFFFFF">
+      <circle cx="90" cy="36" r="3">
+        <animate attributeName="opacity" values="0.2;1;0.2" dur="3s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="320" cy="120" r="2.5">
+        <animate attributeName="opacity" values="1;0.15;1" dur="4s" begin="0.6s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="560" cy="30" r="3.4">
+        <animate attributeName="opacity" values="0.3;1;0.3" dur="3.6s" begin="1.2s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="820" cy="150" r="2.6">
+        <animate attributeName="opacity" values="1;0.2;1" dur="4.4s" begin="0.3s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="470" cy="170" r="2.2">
+        <animate attributeName="opacity" values="0.25;1;0.25" dur="3.2s" begin="1.8s" repeatCount="indefinite"/>
+      </circle>
+    </g>
+
+    <!-- 小火箭 -->
+    <g transform="translate(96,150)">
+      <g>
+        <animateTransform attributeName="transform" type="translate" values="0 0; 0 -18; 0 0" dur="6s" repeatCount="indefinite"/>
+        <path d="M0,-26 C10,-16 16,-4 16,10 L-16,10 C-16,-4 -10,-16 0,-26 Z" fill="#FF6B6B"/>
+        <circle cx="0" cy="-2" r="5.5" fill="#A7D8FF" stroke="#FFFFFF" stroke-width="2"/>
+        <path d="M-16,10 L-24,24 L-14,18 Z" fill="#4D96FF"/>
+        <path d="M16,10 L24,24 L14,18 Z" fill="#4D96FF"/>
+        <path d="M-6,10 L0,10 L6,10 L0,22 Z" fill="#FFB627"/>
+        <circle cx="0" cy="26" r="4" fill="#FFD93D" opacity="0.9">
+          <animate attributeName="r" values="2;7;2" dur="1.4s" repeatCount="indefinite"/>
+        </circle>
+      </g>
+    </g>
+
+    <!-- 山丘 -->
+    <path d="M0,196 C120,158 236,214 352,190 C470,166 596,206 716,186 C800,173 858,192 900,182 L900,260 L0,260 Z" fill="url(#hillFar)"/>
+    <path d="M0,216 C110,190 214,232 330,214 C452,195 566,236 686,216 C790,199 858,220 900,210 L900,260 L0,260 Z" fill="url(#hillMid)"/>
+    <path d="M0,238 C140,220 260,252 420,238 C560,226 700,252 900,234 L900,260 L0,260 Z" fill="url(#hillNear)" opacity="0.95"/>
+
+    <!-- 草丛小花 -->
+    <g>
+      <g transform="translate(250,214)" fill="#FFFFFF" opacity="0.9">
+        <circle cx="0" cy="0" r="3.2"/>
+        <circle cx="7" cy="1" r="3.2"/>
+        <circle cx="-7" cy="1" r="3.2"/>
+        <circle cx="0" cy="4" r="2.6" fill="#FFD93D"/>
+      </g>
+      <g transform="translate(640,222)" fill="#FFFFFF" opacity="0.85">
+        <circle cx="0" cy="0" r="3"/>
+        <circle cx="6.5" cy="1" r="3"/>
+        <circle cx="-6.5" cy="1" r="3"/>
+        <circle cx="0" cy="3.6" r="2.4" fill="#FF6B6B"/>
+      </g>
+    </g>
+  </g>
+</svg>
