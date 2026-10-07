@@ -18,7 +18,7 @@ from PIL import Image, ImageFont
 ROOT = r"f:\schoolCompWorks\clone\gtihubMainPagePro"
 TRACED = os.path.join(ROOT, "build", "footer_traced_e3.svg")
 SRC_PNG = os.path.join(ROOT, "build", "footer_src_final.png")
-OUT = os.path.join(ROOT, "assets", "hero-illus-v9.svg")
+OUT = os.path.join(ROOT, "assets", "hero-illus-v10.svg")
 PREVIEW = os.path.join(ROOT, "build", "hero_final.png")
 
 W, H = 1200, 675
@@ -37,7 +37,8 @@ TILE_R = 11                              # 分离时的圆角半径
 HOLD = "0 0 1 1"
 EASE_OUT = "0.34 0.02 0.18 1"           # 飞出：起手有冲劲，末段平滑收住
 FADE = "0.42 0 0.58 1"
-MOVE_SPLINES = ";".join([HOLD, EASE_OUT, HOLD, HOLD, HOLD])
+FALL_EASE = "0.5 0 0.9 0.45"            # 坠落：重力加速（缓慢起跳，越落越快）
+FALL_SPLINES = ";".join([HOLD, FALL_EASE, HOLD, HOLD, HOLD])
 FADE_SPLINES = ";".join([HOLD, FADE, HOLD, FADE, HOLD])
 
 random.seed(7)
@@ -116,38 +117,39 @@ for row in range(ROWS):
         r, g, b = mpx[col, row]
         colour = f"#{r:02x}{g:02x}{b:02x}"
         x, y = col * TILE, row * TILE
+        ccx, ccy = x + TILE / 2, y + TILE / 2
 
         s = (col + row) / (COLS + ROWS - 2)
         t_in = 0.50 + s * 0.05
-        t_out = 0.94 + s * 0.02
 
-        ccx, ccy = x + TILE / 2, y + TILE / 2
-        vx, vy = ccx - W / 2, ccy - ART_H / 2
-        d = math.hypot(vx, vy)
-        ux, uy = (0.0, -1.0) if d < 1 else (vx / d, vy / d)
-        tx = (W / 2 + TILE) / abs(ux) if abs(ux) > 1e-3 else 1e9
-        ty = (ART_H / 2 + TILE) / abs(uy) if abs(uy) > 1e-3 else 1e9
-        travel = min(tx, ty) + 120
-        dx, dy = ux * travel, uy * travel
+        # 瓦片剥落：沿对角方向逐片起跳（后一片比前一片晚约 2ms），带随机抖动
+        peel = 0.64 + s * 0.10 + random.uniform(-0.012, 0.012)
+        landed = peel + 0.105                      # 坠落耗时（重力加速）
 
-        launch = 0.64 + s * 0.03        # 飞出起点
-        away = 0.78 + s * 0.03          # 全部离场（此后不再飞回）
+        # 下落距离：落到画布下方之外，并带一点水平偏移与自转
+        fall = (H + 150) - y
+        drift = random.uniform(-14, 14)
+        spin = random.choice((-1, 1)) * random.uniform(18, 42)
 
-        # 位置复位必须排在所有色块完全淡出之后（最晚 t_out+0.03 = 0.99），
-        # 否则会在还看得见的时候被拉回原位，形成"收回"的瞬跳
+        # 位置复位放在全部坠落离场之后（此时已不可见）
         RESET_A, RESET_B = 0.992, 0.999
+        kt = f"0;{peel:.3f};{landed:.3f};0.985;{RESET_A};1"
         tiles.append(
             f'    <rect x="{x}" y="{y}" width="{TILE}" height="{TILE}" rx="0" fill="{colour}" opacity="0">'
             f'<animate attributeName="opacity" values="0;0;1;1;0;0" '
-            f'keyTimes="0;{t_in:.3f};{t_in + 0.03:.3f};{t_out:.3f};{t_out + 0.03:.3f};1" '
+            f'keyTimes="0;{t_in:.3f};{t_in + 0.03:.3f};0.985;{RESET_A};1" '
             f'calcMode="spline" keySplines="{FADE_SPLINES}" dur="{CYCLE}s" repeatCount="indefinite"/>'
+            # 坠落：位移（重力加速曲线）
             f'<animateTransform attributeName="transform" type="translate" '
-            f'values="0 0;0 0;{dx:.0f} {dy:.0f};{dx:.0f} {dy:.0f};0 0;0 0" '
-            f'keyTimes="0;{launch:.3f};{away:.3f};{RESET_A};{RESET_B};1" '
-            f'calcMode="spline" keySplines="{MOVE_SPLINES}" dur="{CYCLE}s" repeatCount="indefinite"/>'
+            f'values="0 0;0 0;{drift:.0f} {fall:.0f};{drift:.0f} {fall:.0f};0 0;0 0" '
+            f'keyTimes="{kt}" calcMode="spline" keySplines="{FALL_SPLINES}" dur="{CYCLE}s" repeatCount="indefinite"/>'
+            # 翻身：绕瓦片自身中心旋转（additive 叠加在位移之上）
+            f'<animateTransform attributeName="transform" type="rotate" additive="sum" '
+            f'values="0 {ccx:.0f} {ccy:.0f};0 {ccx:.0f} {ccy:.0f};{spin:.1f} {ccx:.0f} {ccy:.0f};'
+            f'{spin:.1f} {ccx:.0f} {ccy:.0f};0 {ccx:.0f} {ccy:.0f};0 {ccx:.0f} {ccy:.0f}" '
+            f'keyTimes="{kt}" calcMode="spline" keySplines="{FALL_SPLINES}" dur="{CYCLE}s" repeatCount="indefinite"/>'
             f'<animate attributeName="rx" values="0;0;{TILE_R};{TILE_R};0;0" '
-            f'keyTimes="0;{launch:.3f};{away:.3f};{RESET_A};{RESET_B};1" '
-            f'calcMode="spline" keySplines="{MOVE_SPLINES}" dur="{CYCLE}s" repeatCount="indefinite"/>'
+            f'keyTimes="{kt}" calcMode="spline" keySplines="{FALL_SPLINES}" dur="{CYCLE}s" repeatCount="indefinite"/>'
             f"</rect>"
         )
 tile_layer = "\n".join(tiles)
