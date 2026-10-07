@@ -1,64 +1,70 @@
 import math
 import os
+import random
 import re
 
 import cairosvg
+from PIL import Image
 
 ROOT = r"f:\schoolCompWorks\clone\gtihubMainPagePro"
-TRACED = os.path.join(ROOT, "build", "footer_traced_final.svg")
-OUT = os.path.join(ROOT, "assets", "footer-v4.svg")
+TRACED = os.path.join(ROOT, "build", "footer_traced_e3.svg")
+SRC_PNG = os.path.join(ROOT, "build", "footer_src_final.png")
+OUT = os.path.join(ROOT, "assets", "footer-v5.svg")
 PREVIEW = os.path.join(ROOT, "build", "footer_final.png")
 
 W, H = 1200, 800
-SRC_W, SRC_H = 1420, 946                # 2 倍分辨率描摹源（裁切区 710x473）
-ART_W, ART_H = W, H                     # 全幅铺满，比例已对齐
-ART_X, ART_Y = 0, 0
-SCALE = ART_W / SRC_W
+SRC_W, SRC_H = 1420, 946
+SCALE = W / SRC_W
+CYCLE = 12.0                     # 一个完整循环（秒）
 
-# ---------- 1) 描摹图形：每条路径包进 <g>，按散列分配到 16 个动画组 ----------
+TILE = 80                        # 正方形色块边长
+COLS, ROWS = W // TILE, H // TILE   # 15 x 10 = 150 块
+TILE_W = TILE_H = TILE
+
+# ---------- 1) 描摹插画（单层，不再拆散各条路径） ----------
 traced = open(TRACED, encoding="utf-8").read()
-inner = re.search(r"<svg[^>]*>(.*)</svg>", traced, re.S).group(1).strip()
+art = re.search(r"<svg[^>]*>(.*)</svg>", traced, re.S).group(1).strip()
 
-GROUPS = 16
-parts = inner.split("<path")
-grouped = [[] for _ in range(GROUPS)]
-for i, chunk in enumerate(parts[1:]):
-    path = "<path" + chunk.rstrip()
-    if not path.endswith("</path>"):
-        path = path.rstrip()          # 自闭合
-    gi = (i * 7) % GROUPS             # 散列，避免相邻色块同组
-    grouped[gi].append(path)
+# ---------- 2) 马赛克色块：取每格平均色，按相同色系合并 ----------
+mosaic_img = Image.open(SRC_PNG).convert("RGB").resize((COLS, ROWS), Image.BOX)
+mpx = mosaic_img.load()
+print("tile colors sampled:", COLS, "x", ROWS)
 
-art_groups = []
-for gi, paths in enumerate(grouped):
-    art_groups.append(f'          <g class="p{gi}">' + "".join(paths) + "</g>")
-art_body = "\n".join(art_groups)
+random.seed(7)
+tiles = []
+for row in range(ROWS):
+    for col in range(COLS):
+        r, g, b = mpx[col, row]
+        colour = f"#{r:02x}{g:02x}{b:02x}"
+        x, y = col * TILE, row * TILE
 
-# ---------- 2) 聚散动画：每组的散开向量沿径向分布 ----------
-cycle = 10.0
-keyframes = []
-group_css = []
-for gi in range(GROUPS):
-    ang = gi * (2 * math.pi / GROUPS) + 0.35
-    radius = 34 + (gi % 5) * 12              # 34~82px
-    dx = math.cos(ang) * radius
-    dy = math.sin(ang) * radius * 0.72
-    delay = -0.12 * (gi % 6)
-    group_css.append(
-        f".p{gi}{{animation:sc{gi} {cycle}s cubic-bezier(.45,0,.55,1) infinite;animation-delay:{delay:.2f}s}}"
-    )
-    keyframes.append(
-        f"@keyframes sc{gi}{{"
-        f"0%,40%{{transform:translate(0,0)}}"
-        f"62%{{transform:translate({dx:.1f}px,{dy:.1f}px)}}"
-        f"82%,100%{{transform:translate(0,0)}}}}"
-    )
+        # 对角扫描错峰
+        s = (col + row) / (COLS + ROWS - 2)
+        t_in = 0.26 + s * 0.14
+        t_out = 0.80 + s * 0.10
+        # 分离向量：以画面中心为原点向外，幅度克制（保持画面可读）
+        cx, cy = x + TILE / 2, y + TILE / 2
+        ang = math.atan2(cy - H / 2, cx - W / 2) + random.uniform(-0.3, 0.3)
+        dist = random.uniform(24, 62)
+        dx, dy = math.cos(ang) * dist, math.sin(ang) * dist * 0.8
 
-# ---------- 3) 装饰粒子（配色跟随插画：蓝紫 + 粉） ----------
+        tiles.append(
+            # 无缝铺满整格：对齐时即为一幅马赛克画；分离时圆角渐显、缝隙自然出现
+            f'    <rect x="{x}" y="{y}" width="{TILE}" height="{TILE}" rx="0" fill="{colour}" opacity="0">'
+            f'<animate attributeName="opacity" values="0;0;1;1;0;0" '
+            f'keyTimes="0;{t_in:.3f};{t_in + 0.05:.3f};{t_out:.3f};{t_out + 0.05:.3f};1" dur="{CYCLE}s" repeatCount="indefinite"/>'
+            f'<animateTransform attributeName="transform" type="translate" '
+            f'values="0 0;0 0;{dx:.0f} {dy:.0f};0 0;0 0" keyTimes="0;0.44;0.62;0.78;1" dur="{CYCLE}s" repeatCount="indefinite"/>'
+            f'<animate attributeName="rx" values="0;0;22;0;0" keyTimes="0;0.44;0.62;0.78;1" dur="{CYCLE}s" repeatCount="indefinite"/>'
+            f"</rect>"
+        )
+tile_layer = "\n".join(tiles)
+
+# ---------- 3) 装饰粒子 ----------
 particles = []
 for i, (x, y, r, dur, begin) in enumerate([
     (140, 120, 3.0, 12, 0), (260, 470, 2.2, 15, 3), (1060, 140, 3.4, 13, 5),
-    (980, 430, 2.6, 16, 1), (180, 600, 2.4, 14, 7), (1120, 70, 2.8, 11, 9),
+    (980, 430, 2.6, 16, 1), (180, 620, 2.4, 14, 7), (1120, 70, 2.8, 11, 9),
     (70, 300, 2.0, 17, 4), (1140, 300, 2.2, 15, 6), (620, 90, 2.4, 13, 8),
 ]):
     particles.append(
@@ -71,7 +77,7 @@ for i, (x, y, r, dur, begin) in enumerate([
 sparkles = []
 for i, (x, y, r, dur, begin) in enumerate([
     (110, 90, 3.2, 3.2, 0), (330, 60, 2.4, 4.1, 0.9), (880, 80, 3.0, 3.6, 1.7),
-    (1110, 560, 2.6, 4.4, 0.4), (250, 560, 2.2, 3.9, 2.2), (1010, 100, 2.8, 3.4, 1.3),
+    (1110, 640, 2.6, 4.4, 0.4), (250, 640, 2.2, 3.9, 2.2), (1010, 100, 2.8, 3.4, 1.3),
 ]):
     sparkles.append(
         f'<circle cx="{x}" cy="{y}" r="{r}" fill="#FFFFFF">'
@@ -80,20 +86,11 @@ for i, (x, y, r, dur, begin) in enumerate([
     )
 
 svg = f'''<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 {W} {H}" width="{W}" height="{H}" role="img" aria-label="footer illustration">
-  <style>
-    {"".join(group_css)}
-    {"".join(keyframes)}
-  </style>
   <defs>
     <clipPath id="frame"><rect x="0" y="0" width="{W}" height="{H}" rx="22"/></clipPath>
     <pattern id="gridp" width="40" height="40" patternUnits="userSpaceOnUse">
       <path d="M40 0H0V40" fill="none" stroke="#BFD0FF" stroke-width="1" stroke-opacity="0.75"/>
     </pattern>
-    <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#9FB6FF"/>
-      <stop offset="50%" stop-color="#B9A7FF"/>
-      <stop offset="100%" stop-color="#FFC9D8"/>
-    </linearGradient>
     <linearGradient id="sweep" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0"/>
       <stop offset="50%" stop-color="#FFFFFF" stop-opacity="0.16"/>
@@ -121,14 +118,20 @@ svg = f'''<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org
   <g clip-path="url(#frame)">
     <rect x="0" y="0" width="{W}" height="{H}" fill="#1A2340"/>
 
-    <!-- 全宽插画：376 条矢量路径，分 16 组做聚散动画 -->
-    <g transform="translate({ART_X},{ART_Y}) scale({SCALE:.4f})">
-{art_body}
+    <!-- 插画层：色块重组完成后淡入 -->
+    <g transform="translate(0,0) scale({SCALE:.4f})" opacity="1">
+      <animate attributeName="opacity" values="1;1;0;0;1;1"
+               keyTimes="0;0.34;0.44;0.86;0.94;1" dur="{CYCLE}s" repeatCount="indefinite"/>
+{art}
     </g>
 
-    <!-- 矢量网格：散开时浮现，重组时淡出 -->
+    <!-- 马赛克色块层：色彩按格平均，聚拢成方块后向外分离再归位 -->
+{tile_layer}
+
+    <!-- 矢量网格：色块阶段浮现 -->
     <g opacity="0">
-      <animate attributeName="opacity" values="0;0;0.5;0.5;0;0" keyTimes="0;0.40;0.60;0.78;0.90;1" dur="{cycle}s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0;0.4;0.4;0;0"
+               keyTimes="0;0.30;0.44;0.80;0.90;1" dur="{CYCLE}s" repeatCount="indefinite"/>
       <rect x="0" y="0" width="{W}" height="{H}" fill="url(#gridp)"/>
       <rect x="0" y="0" width="{W}" height="{H}" fill="none" stroke="#BFD0FF" stroke-width="2" opacity="0.5"/>
     </g>
@@ -141,7 +144,7 @@ svg = f'''<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org
       </g>
     </g>
 
-    <!-- 底部波浪：取自插画的蓝紫配色 -->
+    <!-- 底部波浪 -->
     <path d="M0,{H - 88} C160,{H - 116} 300,{H - 70} 470,{H - 88} C640,{H - 104} 760,{H - 66} 940,{H - 88} C1060,{H - 100} 1140,{H - 84} 1200,{H - 96} L1200,{H} L0,{H} Z" fill="url(#w1)" opacity="0.72"/>
     <path d="M0,{H - 68} C140,{H - 88} 290,{H - 48} 460,{H - 66} C630,{H - 82} 750,{H - 50} 920,{H - 68} C1050,{H - 80} 1140,{H - 62} 1200,{H - 74} L1200,{H} L0,{H} Z" fill="url(#w2)" opacity="0.9"/>
     <path d="M0,{H - 44} C170,{H - 62} 310,{H - 30} 480,{H - 42} C650,{H - 54} 780,{H - 30} 950,{H - 44} C1080,{H - 54} 1150,{H - 36} 1200,{H - 48} L1200,{H} L0,{H} Z" fill="url(#w3)"/>
@@ -166,7 +169,7 @@ svg = f'''<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org
 
 with open(OUT, "w", encoding="utf-8") as f:
     f.write(svg)
-print(f"written: {OUT}  size: {os.path.getsize(OUT)} bytes  groups={GROUPS}")
+print(f"written: {OUT}  size: {os.path.getsize(OUT)} bytes  tiles={COLS * ROWS}")
 
 cairosvg.svg2png(url=OUT, write_to=PREVIEW, output_width=1000)
 print("preview:", PREVIEW)
