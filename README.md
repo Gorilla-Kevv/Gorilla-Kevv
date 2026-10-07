@@ -144,24 +144,7 @@
 
 <br/>
 
-## 📬 来找我玩
-
-<div align="center">
-
-[![GitHub](https://img.shields.io/badge/GitHub-Gorilla--Kevv-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Gorilla-Kevv)
-[![Bilibili](https://img.shields.io/badge/Bilibili-Gorilla__Kev-00A1D6?style=for-the-badge&logo=bilibili&logoColor=white)](https://space.bilibili.com/182698016)
-[![NetEase](https://img.shields.io/badge/%E7%BD%91%E6%98%93%E4%BA%91%E9%9F%B3%E4%B9%90%E4%BA%BA-%E6%AD%8C%E7%91%9E%E6%B2%AB%E6%8B%89%E8%8F%8C-C20C0C?style=for-the-badge&logo=neteasecloudmusic&logoColor=white)](https://music.163.com/#/artist?id=49513294)
-[![Email](https://img.shields.io/badge/Email-%E5%86%99%E5%9C%A8%E8%BF%99%E5%84%BF-FF6B6B?style=for-the-badge&logo=gmail&logoColor=white)](https://github.com/Gorilla-Kevv)
-
-<br/><br/>
-
-**如果逛到这里，顺手给我个 ⭐ 吧，我会开心一整天 🥰**
-
-</div>
-
-<br/>
-
-<img src="assets/footer-stage-v1.svg" width="100%" alt="stage footer"/>
+<img src="assets/footer-stage-v2.svg" width="100%" alt="stage footer with contact links"/>
 
 <div align="center">
 
