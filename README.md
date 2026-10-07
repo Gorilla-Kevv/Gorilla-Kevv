@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/banner-stage-v4.svg" width="100%" alt="banner"/>
+<img src="assets/banner-stage-v5.svg" width="100%" alt="banner"/>
 
 <br/>
 
