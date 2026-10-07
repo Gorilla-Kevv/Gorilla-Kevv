@@ -4,7 +4,7 @@
 
 <br/>
 
-<img src="https://img.shields.io/badge/%F0%9F%94%A5-553%20Contributions%20(1y)-FF6B6B?style=for-the-badge&labelColor=FFD93D" alt="contributions"/>
+<img src="https://img.shields.io/badge/%F0%9F%94%A5-567%20Contributions%20(1y)-FF6B6B?style=for-the-badge&labelColor=FFD93D" alt="contributions"/>
 <img src="https://img.shields.io/badge/%F0%9F%8E%89-Joined%202022-FF6B6B?style=for-the-badge&labelColor=FFD93D" alt="joined"/>
 <img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.github.com%2Fusers%2FGorilla-Kevv&query=%24.public_repos&label=Public%20Repos&style=for-the-badge&color=4D96FF&labelColor=A7D8FF&logo=github&logoColor=white" alt="repos"/>
 <img src="https://img.shields.io/github/stars/Gorilla-Kevv?style=for-the-badge&label=Stars&color=FFB627&labelColor=FFE7A3&logo=github&logoColor=white" alt="stars"/>
