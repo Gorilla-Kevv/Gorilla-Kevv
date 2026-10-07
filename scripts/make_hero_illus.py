@@ -1,4 +1,10 @@
-"""首图：矢量插画 + 马赛克色块聚散动画 + 标题/打字机文字层（文字内容与位置保持不变）"""
+"""首图：矢量插画（线稿→上色 渐进绘制）+ 马赛克色块聚散动画 + 标题/打字机文字层
+
+动画一循环（21s）：
+  1. 线稿：290 条深色细线分 8 带自上而下逐步浮现
+  2. 上色：675 个色块分 10 带逐步填充
+  3. 马赛克：色块拼合成马赛克 → 炸出画面只留网格约 2s → 飞回重新聚合 → 淡出还原插画
+"""
 import math
 import os
 import random
@@ -11,7 +17,7 @@ from PIL import Image, ImageFont
 ROOT = r"f:\schoolCompWorks\clone\gtihubMainPagePro"
 TRACED = os.path.join(ROOT, "build", "footer_traced_e3.svg")
 SRC_PNG = os.path.join(ROOT, "build", "footer_src_final.png")
-OUT = os.path.join(ROOT, "assets", "hero-illus-v4.svg")
+OUT = os.path.join(ROOT, "assets", "hero-illus-v6.svg")
 PREVIEW = os.path.join(ROOT, "build", "hero_final.png")
 
 W, H = 1200, 675
@@ -19,25 +25,57 @@ SRC_W, SRC_H = 1420, 946
 SCALE = W / SRC_W                      # 插画铺满宽度
 ART_H = SRC_H * SCALE                  # 799.4
 ART_DY = (ART_H - H) / 2               # 垂直居中裁切量 62.2
-CYCLE = 14.0                            # 一个完整循环（秒）
+CYCLE = 21.0                           # 一个完整循环（秒）
 
 TILE = 80
 COLS, ROWS = W // TILE, 10             # 15 x 10（插画空间）
 MORPH_SHIFT = -ART_DY                  # 色块层与插画层同步位移
 
-# ---------- 贝塞尔缓动曲线（SMIL calcMode="spline" 的 keySplines 控制点） ----------
-HOLD = "0 0 1 1"                       # 静止区间（线性，无位移）
+# ---------- 贝塞尔缓动曲线 ----------
+HOLD = "0 0 1 1"                       # 静止区间
 EASE_OUT = "0.34 0.02 0.18 1"          # 飞出：起手有冲劲，末段平滑收住
-EASE_IN = "0.26 0.86 0.28 1"           # 飞回：缓起，落位时柔和减速
-FADE = "0.42 0 0.58 1"                 # 淡入淡出：两端对称的标准缓动
+EASE_IN = "0.26 0.86 0.28 1"           # 飞回：缓起，落位柔和减速
+FADE = "0.42 0 0.58 1"                 # 淡入淡出
 MOVE_SPLINES = ";".join([HOLD, EASE_OUT, HOLD, EASE_IN, HOLD])
 FADE_SPLINES = ";".join([HOLD, FADE, HOLD, FADE, HOLD])
+BAND_SPLINES = ";".join([HOLD, FADE, HOLD, FADE, HOLD, FADE, HOLD, FADE, HOLD])
 
 random.seed(7)
 
-# ---------- 1) 插画 ----------
+# ---------- 1) 插画分层：线稿（深色细线）与色块（其余） ----------
 traced = open(TRACED, encoding="utf-8").read()
-art = re.search(r"<svg[^>]*>(.*)</svg>", traced, re.S).group(1).strip()
+inner = re.search(r"<svg[^>]*>(.*)</svg>", traced, re.S).group(1).strip()
+raw_paths = re.findall(r"<path[^>]*/>", inner)
+
+
+def parse_path(p: str):
+    mf = re.search(r'fill="(#[0-9a-fA-F]{6})"', p)
+    md = re.search(r'd="([^"]+)"', p)
+    if not (mf and md):
+        return None
+    nums = [float(v) for v in re.findall(r"-?\d+\.?\d*", md.group(1))]
+    xs, ys = nums[0::2], nums[1::2]
+    if len(xs) < 2 or len(ys) < 2:
+        return None
+    dx = dy = 0.0
+    mt = re.search(r'transform="translate\(([-\d.]+)[, ]+([-\d.]+)\)"', p)
+    if mt:
+        dx, dy = float(mt.group(1)), float(mt.group(2))
+    x0, x1 = min(xs) + dx, max(xs) + dx
+    y0, y1 = min(ys) + dy, max(ys) + dy
+    r, g, b = int(mf.group(1)[1:3], 16), int(mf.group(1)[3:5], 16), int(mf.group(1)[5:7], 16)
+    lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+    return dict(svg=p, lum=lum, w=x1 - x0, h=y1 - y0, cx=(x0 + x1) / 2, cy=(y0 + y1) / 2)
+
+
+items = [x for x in (parse_path(p) for p in raw_paths) if x]
+ink = [p for p in items if p["lum"] < 0.42 and min(p["w"], p["h"]) < 34]
+print(f"路径分层：线稿 {len(ink)} / 总 {len(items)}")
+
+# 完整插画保持原始叠放顺序（保证最终画面与批准效果完全一致）；
+# 线稿子集单独作为第一阶段图层，绘制完成后淡出，与插画中的同一批线条无缝重合。
+defs_art = '    <g id="art">' + "".join(raw_paths) + "</g>"
+defs_ink = '    <g id="ink">' + "".join(p["svg"] for p in ink) + "</g>"
 
 # ---------- 2) 马赛克色块 ----------
 mosaic_img = Image.open(SRC_PNG).convert("RGB").resize((COLS, ROWS), Image.BOX)
@@ -50,34 +88,28 @@ for row in range(ROWS):
         colour = f"#{r:02x}{g:02x}{b:02x}"
         x, y = col * TILE, row * TILE
 
-        # 对角扫描错峰
         s = (col + row) / (COLS + ROWS - 2)
-        t_in = 0.26 + s * 0.10
-        t_out = 0.92 + s * 0.05
+        t_in = 0.48 + s * 0.06
+        t_out = 0.93 + s * 0.03
 
-        # 飞出画布的位移：沿"由画面中心向外"的方向，走到边界外再留 120px 余量
         ccx, ccy = x + TILE / 2, y + TILE / 2
         vx, vy = ccx - W / 2, ccy - ART_H / 2
         d = math.hypot(vx, vy)
-        if d < 1:
-            ux, uy = 0.0, -1.0
-        else:
-            ux, uy = vx / d, vy / d
+        ux, uy = (0.0, -1.0) if d < 1 else (vx / d, vy / d)
         tx = (W / 2 + TILE) / abs(ux) if abs(ux) > 1e-3 else 1e9
         ty = (ART_H / 2 + TILE) / abs(uy) if abs(uy) > 1e-3 else 1e9
         travel = min(tx, ty) + 120
         dx, dy = ux * travel, uy * travel
 
-        # 飞出/飞回的错峰很小，保证"成形停留"是全体一致的
-        launch = 0.44 + s * 0.02
-        away = 0.545 + s * 0.02
-        back = 0.73 + s * 0.02
-        home = 0.835 + s * 0.02
+        launch = 0.62 + s * 0.02
+        away = 0.68 + s * 0.02
+        back = 0.79 + s * 0.02
+        home = 0.88 + s * 0.02
 
         tiles.append(
             f'    <rect x="{x}" y="{y}" width="{TILE}" height="{TILE}" rx="0" fill="{colour}" opacity="0">'
             f'<animate attributeName="opacity" values="0;0;1;1;0;0" '
-            f'keyTimes="0;{t_in:.3f};{t_in + 0.04:.3f};{t_out:.3f};{t_out + 0.04:.3f};1" '
+            f'keyTimes="0;{t_in:.3f};{t_in + 0.03:.3f};{t_out:.3f};{t_out + 0.04:.3f};1" '
             f'calcMode="spline" keySplines="{FADE_SPLINES}" dur="{CYCLE}s" repeatCount="indefinite"/>'
             f'<animateTransform attributeName="transform" type="translate" '
             f'values="0 0;0 0;{dx:.0f} {dy:.0f};{dx:.0f} {dy:.0f};0 0;0 0" '
@@ -90,7 +122,7 @@ for row in range(ROWS):
         )
 tile_layer = "\n".join(tiles)
 
-# ---------- 3) 文字度量（与原首图完全一致） ----------
+# ---------- 3) 文字度量 ----------
 TITLE = "🦍 Hi 你好呀，我是 Gorilla Kev 👋"
 TITLE_FS = 46
 LINES = ["Voice AI & TTS Builder", "Agent Skill Crafter", "Godot Game Jammer", "Turning Coffee into Code"]
@@ -107,17 +139,16 @@ _cache = {}
 
 def _pick(kind: str, size: int):
     key = (kind, size)
-    if key in _cache:
-        return _cache[key]
-    f = None
-    for p in FONT_PATHS[kind]:
-        try:
-            f = ImageFont.truetype(p, size)
-            break
-        except OSError:
-            continue
-    _cache[key] = f
-    return f
+    if key not in _cache:
+        f = None
+        for p in FONT_PATHS[kind]:
+            try:
+                f = ImageFont.truetype(p, size)
+                break
+            except OSError:
+                continue
+        _cache[key] = f
+    return _cache[key]
 
 
 def char_w(ch: str, fs: int) -> float:
@@ -184,17 +215,16 @@ matrix_parts = []
 for i, (text, lw) in enumerate(zip(LINES, line_ws)):
     n = len(text)
     chw = lw / n
-    s = i * SEG / CYCLE_TXT          # 本句窗口起点（占整轮比例）
-    wend = s + 0.235                 # 正确字符显示到此处（此后整句隐藏，进入下一句）
-    scr_start = s + 0.004            # 乱码翻滚起点
-    scr_end = s + 0.052              # 乱码翻滚结束 → 锁定
+    s = i * SEG / CYCLE_TXT
+    wend = s + 0.235
+    scr_start = s + 0.004
+    scr_end = s + 0.052
     for j, ch in enumerate(text):
         if ch == " ":
             continue
         x = line_left + j * chw + chw / 2
-        d = j * 0.0025               # 轻微左→右波浪错峰
+        d = j * 0.0025
         a0, a1 = scr_start + d, scr_end + d
-        # 单轮：乱码翻滚 → 原地锁定为正确字符（每句文本只出现一次）
         step = (a1 - a0) / TICKS
         for k in range(TICKS):
             g = MATRIX_CHARS[random.randrange(len(MATRIX_CHARS))]
@@ -264,17 +294,44 @@ svg = f'''<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org
     <linearGradient id="w3" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#2C3A5E"/><stop offset="100%" stop-color="#3E4A78"/>
     </linearGradient>
+
+    <!-- 绘制用遮罩：白色方块自上而下扫过，露出被遮罩的内容 -->
+    <mask id="m_line" maskUnits="userSpaceOnUse" x="0" y="0" width="{W}" height="{H}">
+      <rect x="-40" y="-820" width="{W + 80}" height="830" fill="#FFFFFF">
+        <animate attributeName="y" values="-820;-820;0;0;-820;-820"
+                 keyTimes="0;0.020;0.180;0.440;0.480;1" dur="{CYCLE}s" repeatCount="indefinite"/>
+      </rect>
+    </mask>
+    <mask id="m_art" maskUnits="userSpaceOnUse" x="0" y="0" width="{W}" height="{H}">
+      <rect x="-40" y="-820" width="{W + 80}" height="830" fill="#FFFFFF">
+        <animate attributeName="y" values="-820;-820;0;0;-820;-820"
+                 keyTimes="0;0.220;0.400;0.985;0.995;1" dur="{CYCLE}s" repeatCount="indefinite"/>
+      </rect>
+    </mask>
+
+{defs_art}
+{defs_ink}
   </defs>
 
   <g clip-path="url(#frame)">
     <rect x="0" y="0" width="{W}" height="{H}" fill="#1A2340"/>
 
-    <!-- 插画层（垂直居中裁切适配画布） -->
-    <g transform="translate(0,{MORPH_SHIFT:.1f}) scale({SCALE:.4f})" opacity="1">
-      <animate attributeName="opacity" values="1;1;0;0;1;1"
-               keyTimes="0;0.28;0.38;0.93;0.98;1"
-               calcMode="spline" keySplines="{FADE_SPLINES}" dur="{CYCLE}s" repeatCount="indefinite"/>
-{art}
+    <!-- 阶段一：线稿逐段浮现（290 条深色细线） -->
+    <g mask="url(#m_line)">
+      <g transform="translate(0,{MORPH_SHIFT:.1f}) scale({SCALE:.4f})" opacity="1">
+        <animate attributeName="opacity" values="1;1;0;0" keyTimes="0;0.240;0.420;1"
+                 dur="{CYCLE}s" repeatCount="indefinite"/>
+        <use xlink:href="#ink" href="#ink"/>
+      </g>
+    </g>
+
+    <!-- 阶段二：完整插画自上而下填充上色（原始叠放顺序，与最终效果完全一致） -->
+    <g mask="url(#m_art)">
+      <g transform="translate(0,{MORPH_SHIFT:.1f}) scale({SCALE:.4f})" opacity="1">
+        <animate attributeName="opacity" values="1;1;0;0;1;1;0;0"
+                 keyTimes="0;0.500;0.580;0.920;0.950;0.985;0.995;1" dur="{CYCLE}s" repeatCount="indefinite"/>
+        <use xlink:href="#art" href="#art"/>
+      </g>
     </g>
 
     <!-- 马赛克色块层 -->
@@ -285,7 +342,7 @@ svg = f'''<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org
     <!-- 矢量网格 -->
     <g opacity="0">
       <animate attributeName="opacity" values="0;0;0.55;0.55;0;0"
-               keyTimes="0;0.34;0.44;0.76;0.90;1"
+               keyTimes="0;0.50;0.58;0.88;0.95;1"
                calcMode="spline" keySplines="{FADE_SPLINES}" dur="{CYCLE}s" repeatCount="indefinite"/>
       <rect x="0" y="0" width="{W}" height="{H}" fill="url(#gridp)"/>
       <rect x="0" y="0" width="{W}" height="{H}" fill="none" stroke="#BFD0FF" stroke-width="2" opacity="0.5"/>
@@ -314,7 +371,7 @@ svg = f'''<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org
       </ellipse>
     </g>
 
-    <!-- 文字底板（在人物插画上适当降低浓度，保持文字可读的同时不遮挡面部） -->
+    <!-- 文字底板 -->
     <g filter="url(#panelblur)">
       <rect x="{panel_x}" y="{panel_y}" width="{panel_w:.0f}" height="{panel_h}" rx="26" fill="#06202C" fill-opacity="0.34" stroke="#FFFFFF" stroke-opacity="0.12" stroke-width="1.5"/>
     </g>
@@ -340,7 +397,8 @@ svg = f'''<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org
 
 with open(OUT, "w", encoding="utf-8") as f:
     f.write(svg)
-print(f"written: {OUT}  size: {os.path.getsize(OUT)} bytes  tiles={COLS * ROWS}  art_dy={MORPH_SHIFT:.1f}")
+print(f"written: {OUT}  size: {os.path.getsize(OUT)} bytes  tiles={COLS * ROWS}  "
+      f"ink={len(ink)} total={len(items)}  art_dy={MORPH_SHIFT:.1f}")
 
 cairosvg.svg2png(url=OUT, write_to=PREVIEW, output_width=1000)
 print("preview:", PREVIEW)
