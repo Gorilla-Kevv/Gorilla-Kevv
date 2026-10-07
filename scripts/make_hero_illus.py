@@ -11,7 +11,7 @@ from PIL import Image, ImageFont
 ROOT = r"f:\schoolCompWorks\clone\gtihubMainPagePro"
 TRACED = os.path.join(ROOT, "build", "footer_traced_e3.svg")
 SRC_PNG = os.path.join(ROOT, "build", "footer_src_final.png")
-OUT = os.path.join(ROOT, "assets", "hero-illus-v3.svg")
+OUT = os.path.join(ROOT, "assets", "hero-illus-v4.svg")
 PREVIEW = os.path.join(ROOT, "build", "hero_final.png")
 
 W, H = 1200, 675
@@ -184,24 +184,22 @@ matrix_parts = []
 for i, (text, lw) in enumerate(zip(LINES, line_ws)):
     n = len(text)
     chw = lw / n
-    s = i * SEG / CYCLE_TXT
-    wend = s + 0.235
-    r1_scr_start = s + 0.004
-    r1_scr_end = s + 0.052
-    r1_ok_end = s + 0.140
-    r2_scr_end = s + 0.202
+    s = i * SEG / CYCLE_TXT          # 本句窗口起点（占整轮比例）
+    wend = s + 0.235                 # 正确字符显示到此处（此后整句隐藏，进入下一句）
+    scr_start = s + 0.004            # 乱码翻滚起点
+    scr_end = s + 0.052              # 乱码翻滚结束 → 锁定
     for j, ch in enumerate(text):
         if ch == " ":
             continue
         x = line_left + j * chw + chw / 2
-        d = j * 0.0025
-        for (a0, a1, ok_end) in ((r1_scr_start + d, r1_scr_end + d, r1_ok_end + d),
-                                 (s + 0.150 + d, r2_scr_end + d, wend)):
-            step = (a1 - a0) / TICKS
-            for k in range(TICKS):
-                g = MATRIX_CHARS[random.randrange(len(MATRIX_CHARS))]
-                matrix_parts.append(mtx_text(x, line_y, g, "#5FD8A8", a0 + k * step, a0 + (k + 1) * step))
-            matrix_parts.append(mtx_text(x, line_y, ch, "#FFFFFF", a1, ok_end))
+        d = j * 0.0025               # 轻微左→右波浪错峰
+        a0, a1 = scr_start + d, scr_end + d
+        # 单轮：乱码翻滚 → 原地锁定为正确字符（每句文本只出现一次）
+        step = (a1 - a0) / TICKS
+        for k in range(TICKS):
+            g = MATRIX_CHARS[random.randrange(len(MATRIX_CHARS))]
+            matrix_parts.append(mtx_text(x, line_y, g, "#5FD8A8", a0 + k * step, a0 + (k + 1) * step))
+        matrix_parts.append(mtx_text(x, line_y, ch, "#FFFFFF", a1, wend))
 line_layer = "\n".join(matrix_parts)
 
 # ---------- 4) 粒子 / 星点 ----------
