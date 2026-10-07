@@ -18,7 +18,7 @@ from PIL import Image, ImageFont
 ROOT = r"f:\schoolCompWorks\clone\gtihubMainPagePro"
 TRACED = os.path.join(ROOT, "build", "footer_traced_e3.svg")
 SRC_PNG = os.path.join(ROOT, "build", "footer_src_final.png")
-OUT = os.path.join(ROOT, "assets", "hero-illus-v7.svg")
+OUT = os.path.join(ROOT, "assets", "hero-illus-v8.svg")
 PREVIEW = os.path.join(ROOT, "build", "hero_final.png")
 
 W, H = 1200, 675
@@ -132,6 +132,9 @@ for row in range(ROWS):
         launch = 0.64 + s * 0.03        # 飞出起点
         away = 0.78 + s * 0.03          # 全部离场（此后不再飞回）
 
+        # 位置复位必须排在所有色块完全淡出之后（最晚 t_out+0.03 = 0.99），
+        # 否则会在还看得见的时候被拉回原位，形成"收回"的瞬跳
+        RESET_A, RESET_B = 0.992, 0.999
         tiles.append(
             f'    <rect x="{x}" y="{y}" width="{TILE}" height="{TILE}" rx="0" fill="{colour}" opacity="0">'
             f'<animate attributeName="opacity" values="0;0;1;1;0;0" '
@@ -139,10 +142,10 @@ for row in range(ROWS):
             f'calcMode="spline" keySplines="{FADE_SPLINES}" dur="{CYCLE}s" repeatCount="indefinite"/>'
             f'<animateTransform attributeName="transform" type="translate" '
             f'values="0 0;0 0;{dx:.0f} {dy:.0f};{dx:.0f} {dy:.0f};0 0;0 0" '
-            f'keyTimes="0;{launch:.3f};{away:.3f};0.940;0.960;1" '
+            f'keyTimes="0;{launch:.3f};{away:.3f};{RESET_A};{RESET_B};1" '
             f'calcMode="spline" keySplines="{MOVE_SPLINES}" dur="{CYCLE}s" repeatCount="indefinite"/>'
             f'<animate attributeName="rx" values="0;0;22;22;0;0" '
-            f'keyTimes="0;{launch:.3f};{away:.3f};0.940;0.960;1" '
+            f'keyTimes="0;{launch:.3f};{away:.3f};{RESET_A};{RESET_B};1" '
             f'calcMode="spline" keySplines="{MOVE_SPLINES}" dur="{CYCLE}s" repeatCount="indefinite"/>'
             f"</rect>"
         )
