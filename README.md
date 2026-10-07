@@ -1,10 +1,8 @@
 <div align="center">
 
-<img src="assets/banner-stage-v2.svg" width="100%" alt="banner"/>
+<img src="assets/banner-stage-v3.svg" width="100%" alt="banner"/>
 
 # 🦍 Hi 你好呀，我是 Gorilla Kev 👋
-
-<img src="https://readme-typing-svg.demolab.com?font=Baloo+2&size=22&pause=1200&color=FF6B6B&center=true&vCenter=true&width=600&height=46&lines=Voice+AI+%26+TTS+Builder;Agent+Skill+Crafter;Godot+Game+Jammer;Turning+Coffee+into+Code" alt="typing"/>
 
 <br/>
 
