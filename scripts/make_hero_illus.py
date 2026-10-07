@@ -18,7 +18,7 @@ from PIL import Image, ImageFont
 ROOT = r"f:\schoolCompWorks\clone\gtihubMainPagePro"
 TRACED = os.path.join(ROOT, "build", "footer_traced_e3.svg")
 SRC_PNG = os.path.join(ROOT, "build", "footer_src_final.png")
-OUT = os.path.join(ROOT, "assets", "hero-illus-v8.svg")
+OUT = os.path.join(ROOT, "assets", "hero-illus-v9.svg")
 PREVIEW = os.path.join(ROOT, "build", "hero_final.png")
 
 W, H = 1200, 675
@@ -29,8 +29,9 @@ ART_DY = (ART_H - H) / 2
 MORPH_SHIFT = -ART_DY
 CYCLE = 12.0                            # 一个完整循环（秒）
 
-TILE = 80
-COLS, ROWS = W // TILE, 10
+TILE = 40                                # 与背景网格同尺寸（1 格 = 1 个色块）
+COLS, ROWS = W // TILE, 20               # 30 x 20 = 600 块
+TILE_R = 11                              # 分离时的圆角半径
 
 # ---------- 贝塞尔缓动 ----------
 HOLD = "0 0 1 1"
@@ -144,7 +145,7 @@ for row in range(ROWS):
             f'values="0 0;0 0;{dx:.0f} {dy:.0f};{dx:.0f} {dy:.0f};0 0;0 0" '
             f'keyTimes="0;{launch:.3f};{away:.3f};{RESET_A};{RESET_B};1" '
             f'calcMode="spline" keySplines="{MOVE_SPLINES}" dur="{CYCLE}s" repeatCount="indefinite"/>'
-            f'<animate attributeName="rx" values="0;0;22;22;0;0" '
+            f'<animate attributeName="rx" values="0;0;{TILE_R};{TILE_R};0;0" '
             f'keyTimes="0;{launch:.3f};{away:.3f};{RESET_A};{RESET_B};1" '
             f'calcMode="spline" keySplines="{MOVE_SPLINES}" dur="{CYCLE}s" repeatCount="indefinite"/>'
             f"</rect>"
@@ -289,8 +290,10 @@ for i, (x, y, r, dur, begin) in enumerate([
 svg = f'''<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 {W} {H}" width="{W}" height="{H}" role="img" aria-label="hero illustration">
   <defs>
     <clipPath id="frame"><rect x="0" y="0" width="{W}" height="{H}" rx="22"/></clipPath>
-    <pattern id="gridp" width="40" height="40" patternUnits="userSpaceOnUse">
-      <path d="M40 0H0V40" fill="none" stroke="#BFD0FF" stroke-width="1" stroke-opacity="0.75"/>
+    <!-- 网格与色块同尺寸（40px）并随色块层一起上移，保证完全对齐 -->
+    <pattern id="gridp" width="{TILE}" height="{TILE}" patternUnits="userSpaceOnUse"
+             patternTransform="translate(0,{MORPH_SHIFT:.1f})">
+      <path d="M{TILE} 0H0V{TILE}" fill="none" stroke="#BFD0FF" stroke-width="1" stroke-opacity="0.75"/>
     </pattern>
     <filter id="panelblur" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="7"/></filter>
     <filter id="tshadow" x="-40%" y="-40%" width="180%" height="180%">
