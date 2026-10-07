@@ -11,7 +11,7 @@ from PIL import Image, ImageFont
 ROOT = r"f:\schoolCompWorks\clone\gtihubMainPagePro"
 TRACED = os.path.join(ROOT, "build", "footer_traced_e3.svg")
 SRC_PNG = os.path.join(ROOT, "build", "footer_src_final.png")
-OUT = os.path.join(ROOT, "assets", "hero-illus-v1.svg")
+OUT = os.path.join(ROOT, "assets", "hero-illus-v2.svg")
 PREVIEW = os.path.join(ROOT, "build", "hero_final.png")
 
 W, H = 1200, 675
@@ -19,7 +19,7 @@ SRC_W, SRC_H = 1420, 946
 SCALE = W / SRC_W                      # 插画铺满宽度
 ART_H = SRC_H * SCALE                  # 799.4
 ART_DY = (ART_H - H) / 2               # 垂直居中裁切量 62.2
-CYCLE = 12.0
+CYCLE = 14.0                            # 一个完整循环（秒）
 
 TILE = 80
 COLS, ROWS = W // TILE, 10             # 15 x 10（插画空间）
@@ -41,20 +41,40 @@ for row in range(ROWS):
         r, g, b = mpx[col, row]
         colour = f"#{r:02x}{g:02x}{b:02x}"
         x, y = col * TILE, row * TILE
+
+        # 对角扫描错峰
         s = (col + row) / (COLS + ROWS - 2)
-        t_in = 0.26 + s * 0.14
-        t_out = 0.80 + s * 0.10
-        cx, cy = x + TILE / 2, y + TILE / 2
-        ang = math.atan2(cy - ART_H / 2, cx - W / 2) + random.uniform(-0.3, 0.3)
-        dist = random.uniform(24, 62)
-        dx, dy = math.cos(ang) * dist, math.sin(ang) * dist * 0.8
+        t_in = 0.26 + s * 0.10
+        t_out = 0.92 + s * 0.05
+
+        # 飞出画布的位移：沿"由画面中心向外"的方向，走到边界外再留 120px 余量
+        ccx, ccy = x + TILE / 2, y + TILE / 2
+        vx, vy = ccx - W / 2, ccy - ART_H / 2
+        d = math.hypot(vx, vy)
+        if d < 1:
+            ux, uy = 0.0, -1.0
+        else:
+            ux, uy = vx / d, vy / d
+        tx = (W / 2 + TILE) / abs(ux) if abs(ux) > 1e-3 else 1e9
+        ty = (ART_H / 2 + TILE) / abs(uy) if abs(uy) > 1e-3 else 1e9
+        travel = min(tx, ty) + 120
+        dx, dy = ux * travel, uy * travel
+
+        # 飞出/飞回的错峰很小，保证"成形停留"是全体一致的
+        launch = 0.44 + s * 0.02
+        away = 0.545 + s * 0.02
+        back = 0.73 + s * 0.02
+        home = 0.835 + s * 0.02
+
         tiles.append(
             f'    <rect x="{x}" y="{y}" width="{TILE}" height="{TILE}" rx="0" fill="{colour}" opacity="0">'
             f'<animate attributeName="opacity" values="0;0;1;1;0;0" '
-            f'keyTimes="0;{t_in:.3f};{t_in + 0.05:.3f};{t_out:.3f};{t_out + 0.05:.3f};1" dur="{CYCLE}s" repeatCount="indefinite"/>'
+            f'keyTimes="0;{t_in:.3f};{t_in + 0.04:.3f};{t_out:.3f};{t_out + 0.04:.3f};1" dur="{CYCLE}s" repeatCount="indefinite"/>'
             f'<animateTransform attributeName="transform" type="translate" '
-            f'values="0 0;0 0;{dx:.0f} {dy:.0f};0 0;0 0" keyTimes="0;0.44;0.62;0.78;1" dur="{CYCLE}s" repeatCount="indefinite"/>'
-            f'<animate attributeName="rx" values="0;0;22;0;0" keyTimes="0;0.44;0.62;0.78;1" dur="{CYCLE}s" repeatCount="indefinite"/>'
+            f'values="0 0;0 0;{dx:.0f} {dy:.0f};{dx:.0f} {dy:.0f};0 0;0 0" '
+            f'keyTimes="0;{launch:.3f};{away:.3f};{back:.3f};{home:.3f};1" dur="{CYCLE}s" repeatCount="indefinite"/>'
+            f'<animate attributeName="rx" values="0;0;22;22;0;0" '
+            f'keyTimes="0;{launch:.3f};{away:.3f};{back:.3f};{home:.3f};1" dur="{CYCLE}s" repeatCount="indefinite"/>'
             f"</rect>"
         )
 tile_layer = "\n".join(tiles)
@@ -243,7 +263,7 @@ svg = f'''<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org
     <!-- 插画层（垂直居中裁切适配画布） -->
     <g transform="translate(0,{MORPH_SHIFT:.1f}) scale({SCALE:.4f})" opacity="1">
       <animate attributeName="opacity" values="1;1;0;0;1;1"
-               keyTimes="0;0.34;0.44;0.86;0.94;1" dur="{CYCLE}s" repeatCount="indefinite"/>
+               keyTimes="0;0.28;0.38;0.93;0.98;1" dur="{CYCLE}s" repeatCount="indefinite"/>
 {art}
     </g>
 
@@ -254,8 +274,8 @@ svg = f'''<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org
 
     <!-- 矢量网格 -->
     <g opacity="0">
-      <animate attributeName="opacity" values="0;0;0.4;0.4;0;0"
-               keyTimes="0;0.30;0.44;0.80;0.90;1" dur="{CYCLE}s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0;0.55;0.55;0;0"
+               keyTimes="0;0.34;0.44;0.76;0.90;1" dur="{CYCLE}s" repeatCount="indefinite"/>
       <rect x="0" y="0" width="{W}" height="{H}" fill="url(#gridp)"/>
       <rect x="0" y="0" width="{W}" height="{H}" fill="none" stroke="#BFD0FF" stroke-width="2" opacity="0.5"/>
     </g>

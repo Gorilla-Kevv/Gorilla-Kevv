@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/hero-illus-v1.svg" width="100%" alt="hero illustration"/>
+<img src="assets/hero-illus-v2.svg" width="100%" alt="hero illustration"/>
 
 <br/>
 
