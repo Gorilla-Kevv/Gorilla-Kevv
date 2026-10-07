@@ -11,7 +11,7 @@ from PIL import Image, ImageFont
 ROOT = r"f:\schoolCompWorks\clone\gtihubMainPagePro"
 TRACED = os.path.join(ROOT, "build", "footer_traced_e3.svg")
 SRC_PNG = os.path.join(ROOT, "build", "footer_src_final.png")
-OUT = os.path.join(ROOT, "assets", "hero-illus-v2.svg")
+OUT = os.path.join(ROOT, "assets", "hero-illus-v3.svg")
 PREVIEW = os.path.join(ROOT, "build", "hero_final.png")
 
 W, H = 1200, 675
@@ -24,6 +24,14 @@ CYCLE = 14.0                            # 一个完整循环（秒）
 TILE = 80
 COLS, ROWS = W // TILE, 10             # 15 x 10（插画空间）
 MORPH_SHIFT = -ART_DY                  # 色块层与插画层同步位移
+
+# ---------- 贝塞尔缓动曲线（SMIL calcMode="spline" 的 keySplines 控制点） ----------
+HOLD = "0 0 1 1"                       # 静止区间（线性，无位移）
+EASE_OUT = "0.34 0.02 0.18 1"          # 飞出：起手有冲劲，末段平滑收住
+EASE_IN = "0.26 0.86 0.28 1"           # 飞回：缓起，落位时柔和减速
+FADE = "0.42 0 0.58 1"                 # 淡入淡出：两端对称的标准缓动
+MOVE_SPLINES = ";".join([HOLD, EASE_OUT, HOLD, EASE_IN, HOLD])
+FADE_SPLINES = ";".join([HOLD, FADE, HOLD, FADE, HOLD])
 
 random.seed(7)
 
@@ -69,12 +77,15 @@ for row in range(ROWS):
         tiles.append(
             f'    <rect x="{x}" y="{y}" width="{TILE}" height="{TILE}" rx="0" fill="{colour}" opacity="0">'
             f'<animate attributeName="opacity" values="0;0;1;1;0;0" '
-            f'keyTimes="0;{t_in:.3f};{t_in + 0.04:.3f};{t_out:.3f};{t_out + 0.04:.3f};1" dur="{CYCLE}s" repeatCount="indefinite"/>'
+            f'keyTimes="0;{t_in:.3f};{t_in + 0.04:.3f};{t_out:.3f};{t_out + 0.04:.3f};1" '
+            f'calcMode="spline" keySplines="{FADE_SPLINES}" dur="{CYCLE}s" repeatCount="indefinite"/>'
             f'<animateTransform attributeName="transform" type="translate" '
             f'values="0 0;0 0;{dx:.0f} {dy:.0f};{dx:.0f} {dy:.0f};0 0;0 0" '
-            f'keyTimes="0;{launch:.3f};{away:.3f};{back:.3f};{home:.3f};1" dur="{CYCLE}s" repeatCount="indefinite"/>'
+            f'keyTimes="0;{launch:.3f};{away:.3f};{back:.3f};{home:.3f};1" '
+            f'calcMode="spline" keySplines="{MOVE_SPLINES}" dur="{CYCLE}s" repeatCount="indefinite"/>'
             f'<animate attributeName="rx" values="0;0;22;22;0;0" '
-            f'keyTimes="0;{launch:.3f};{away:.3f};{back:.3f};{home:.3f};1" dur="{CYCLE}s" repeatCount="indefinite"/>'
+            f'keyTimes="0;{launch:.3f};{away:.3f};{back:.3f};{home:.3f};1" '
+            f'calcMode="spline" keySplines="{MOVE_SPLINES}" dur="{CYCLE}s" repeatCount="indefinite"/>'
             f"</rect>"
         )
 tile_layer = "\n".join(tiles)
@@ -263,7 +274,8 @@ svg = f'''<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org
     <!-- 插画层（垂直居中裁切适配画布） -->
     <g transform="translate(0,{MORPH_SHIFT:.1f}) scale({SCALE:.4f})" opacity="1">
       <animate attributeName="opacity" values="1;1;0;0;1;1"
-               keyTimes="0;0.28;0.38;0.93;0.98;1" dur="{CYCLE}s" repeatCount="indefinite"/>
+               keyTimes="0;0.28;0.38;0.93;0.98;1"
+               calcMode="spline" keySplines="{FADE_SPLINES}" dur="{CYCLE}s" repeatCount="indefinite"/>
 {art}
     </g>
 
@@ -275,7 +287,8 @@ svg = f'''<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org
     <!-- 矢量网格 -->
     <g opacity="0">
       <animate attributeName="opacity" values="0;0;0.55;0.55;0;0"
-               keyTimes="0;0.34;0.44;0.76;0.90;1" dur="{CYCLE}s" repeatCount="indefinite"/>
+               keyTimes="0;0.34;0.44;0.76;0.90;1"
+               calcMode="spline" keySplines="{FADE_SPLINES}" dur="{CYCLE}s" repeatCount="indefinite"/>
       <rect x="0" y="0" width="{W}" height="{H}" fill="url(#gridp)"/>
       <rect x="0" y="0" width="{W}" height="{H}" fill="none" stroke="#BFD0FF" stroke-width="2" opacity="0.5"/>
     </g>
