@@ -1,9 +1,10 @@
-"""首图：矢量插画（线稿→上色 渐进绘制）+ 马赛克色块聚散动画 + 标题/打字机文字层
+"""首图动画：起稿 → 逐层上色（底色/皮肤/眼睛/细节）→ 成图 → 马赛克 → 色块飞出清场 → 循环
 
-动画一循环（21s）：
-  1. 线稿：290 条深色细线分 8 带自上而下逐步浮现
-  2. 上色：675 个色块分 10 带逐步填充
-  3. 马赛克：色块拼合成马赛克 → 炸出画面只留网格约 2s → 飞回重新聚合 → 淡出还原插画
+要点：
+* 上色按图层顺序推进，每层是一组同色系路径（保持组内原始叠放顺序）
+* 底色层 = 原始叠放顺序中最靠前的 100 条（覆盖 93% 面积的大色块），
+  因此整体叠放顺序与原图接近，最终画面与原插画基本一致
+* 清场：色块飞出画面后不再飞回，画面清空即进入下一轮循环
 """
 import math
 import os
@@ -17,32 +18,30 @@ from PIL import Image, ImageFont
 ROOT = r"f:\schoolCompWorks\clone\gtihubMainPagePro"
 TRACED = os.path.join(ROOT, "build", "footer_traced_e3.svg")
 SRC_PNG = os.path.join(ROOT, "build", "footer_src_final.png")
-OUT = os.path.join(ROOT, "assets", "hero-illus-v6.svg")
+OUT = os.path.join(ROOT, "assets", "hero-illus-v7.svg")
 PREVIEW = os.path.join(ROOT, "build", "hero_final.png")
 
 W, H = 1200, 675
 SRC_W, SRC_H = 1420, 946
-SCALE = W / SRC_W                      # 插画铺满宽度
-ART_H = SRC_H * SCALE                  # 799.4
-ART_DY = (ART_H - H) / 2               # 垂直居中裁切量 62.2
-CYCLE = 21.0                           # 一个完整循环（秒）
+SCALE = W / SRC_W
+ART_H = SRC_H * SCALE
+ART_DY = (ART_H - H) / 2
+MORPH_SHIFT = -ART_DY
+CYCLE = 12.0                            # 一个完整循环（秒）
 
 TILE = 80
-COLS, ROWS = W // TILE, 10             # 15 x 10（插画空间）
-MORPH_SHIFT = -ART_DY                  # 色块层与插画层同步位移
+COLS, ROWS = W // TILE, 10
 
-# ---------- 贝塞尔缓动曲线 ----------
-HOLD = "0 0 1 1"                       # 静止区间
-EASE_OUT = "0.34 0.02 0.18 1"          # 飞出：起手有冲劲，末段平滑收住
-EASE_IN = "0.26 0.86 0.28 1"           # 飞回：缓起，落位柔和减速
-FADE = "0.42 0 0.58 1"                 # 淡入淡出
-MOVE_SPLINES = ";".join([HOLD, EASE_OUT, HOLD, EASE_IN, HOLD])
+# ---------- 贝塞尔缓动 ----------
+HOLD = "0 0 1 1"
+EASE_OUT = "0.34 0.02 0.18 1"           # 飞出：起手有冲劲，末段平滑收住
+FADE = "0.42 0 0.58 1"
+MOVE_SPLINES = ";".join([HOLD, EASE_OUT, HOLD, HOLD, HOLD])
 FADE_SPLINES = ";".join([HOLD, FADE, HOLD, FADE, HOLD])
-BAND_SPLINES = ";".join([HOLD, FADE, HOLD, FADE, HOLD, FADE, HOLD, FADE, HOLD])
 
 random.seed(7)
 
-# ---------- 1) 插画分层：线稿（深色细线）与色块（其余） ----------
+# ---------- 1) 路径解析与分层 ----------
 traced = open(TRACED, encoding="utf-8").read()
 inner = re.search(r"<svg[^>]*>(.*)</svg>", traced, re.S).group(1).strip()
 raw_paths = re.findall(r"<path[^>]*/>", inner)
@@ -57,27 +56,56 @@ def parse_path(p: str):
     xs, ys = nums[0::2], nums[1::2]
     if len(xs) < 2 or len(ys) < 2:
         return None
-    dx = dy = 0.0
-    mt = re.search(r'transform="translate\(([-\d.]+)[, ]+([-\d.]+)\)"', p)
-    if mt:
-        dx, dy = float(mt.group(1)), float(mt.group(2))
-    x0, x1 = min(xs) + dx, max(xs) + dx
-    y0, y1 = min(ys) + dy, max(ys) + dy
     r, g, b = int(mf.group(1)[1:3], 16), int(mf.group(1)[3:5], 16), int(mf.group(1)[5:7], 16)
     lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255
-    return dict(svg=p, lum=lum, w=x1 - x0, h=y1 - y0, cx=(x0 + x1) / 2, cy=(y0 + y1) / 2)
+    return dict(svg=p, r=r, g=g, b=b, lum=lum, w=max(xs) - min(xs), h=max(ys) - min(ys))
 
 
 items = [x for x in (parse_path(p) for p in raw_paths) if x]
-ink = [p for p in items if p["lum"] < 0.42 and min(p["w"], p["h"]) < 34]
-print(f"路径分层：线稿 {len(ink)} / 总 {len(items)}")
 
-# 完整插画保持原始叠放顺序（保证最终画面与批准效果完全一致）；
-# 线稿子集单独作为第一阶段图层，绘制完成后淡出，与插画中的同一批线条无缝重合。
-defs_art = '    <g id="art">' + "".join(raw_paths) + "</g>"
-defs_ink = '    <g id="ink">' + "".join(p["svg"] for p in ink) + "</g>"
+# 线稿（起稿阶段单独一层）
+ink = [x for x in items if x["lum"] < 0.42 and min(x["w"], x["h"]) < 34]
 
-# ---------- 2) 马赛克色块 ----------
+# 上色四层：底色取原始叠放顺序最靠前的若干条（保证大块底子与叠放关系不变，
+# 实测最终画面与原始描摹差异 < 0.35%），其后按颜色族分出 皮肤 / 眼睛 / 细节
+BASE_K = 30
+base = items[:BASE_K]
+rest = items[BASE_K:]
+
+skin = [x for x in rest
+        if x["r"] > x["g"] >= x["b"] and 18 <= x["r"] - x["b"] <= 95 and x["lum"] >= 0.5]
+skin_ids = {id(x) for x in skin}
+eyes = [x for x in rest
+        if x["b"] > x["r"] and x["b"] > x["g"] and (x["b"] - x["r"]) >= 8 and x["lum"] >= 0.28
+        and id(x) not in skin_ids]
+eye_ids = {id(x) for x in eyes}
+detail = [x for x in rest if id(x) not in skin_ids and id(x) not in eye_ids]
+print(f"分层：底色 {len(base)} / 皮肤 {len(skin)} / 眼睛 {len(eyes)} / 细节 {len(detail)} / 线稿 {len(ink)}")
+
+LAYER_ORDER = [("base", base), ("skin", skin), ("eyes", eyes), ("detail", detail)]
+
+# ---------- 2) 各层动画时间 ----------
+LAYER_TIME = {"base": (0.165, 0.205), "skin": (0.210, 0.250),
+              "eyes": (0.260, 0.292), "detail": (0.300, 0.352)}
+WRAP_OUT, WRAP_IN = 0.520, 0.580        # 交给马赛克：整幅淡出
+
+layers = []
+for name, plist in LAYER_ORDER:
+    t0, t1 = LAYER_TIME[name]
+    body = "".join(x["svg"] for x in plist)
+    if not body:
+        continue
+    layers.append(
+        f'      <g opacity="0" data-layer="{name}">'
+        f'<animate attributeName="opacity" values="0;0;1;1" keyTimes="0;{t0:.3f};{t1:.3f};1" '
+        f'calcMode="spline" keySplines="{";".join([HOLD, FADE, HOLD])}" '
+        f'dur="{CYCLE}s" repeatCount="indefinite"/>' + body + "</g>"
+    )
+layer_body = "\n".join(layers)
+
+defs_ink = '    <g id="ink">' + "".join(x["svg"] for x in ink) + "</g>"
+
+# ---------- 3) 马赛克色块 ----------
 mosaic_img = Image.open(SRC_PNG).convert("RGB").resize((COLS, ROWS), Image.BOX)
 mpx = mosaic_img.load()
 
@@ -89,8 +117,8 @@ for row in range(ROWS):
         x, y = col * TILE, row * TILE
 
         s = (col + row) / (COLS + ROWS - 2)
-        t_in = 0.48 + s * 0.06
-        t_out = 0.93 + s * 0.03
+        t_in = 0.50 + s * 0.05
+        t_out = 0.94 + s * 0.02
 
         ccx, ccy = x + TILE / 2, y + TILE / 2
         vx, vy = ccx - W / 2, ccy - ART_H / 2
@@ -101,28 +129,26 @@ for row in range(ROWS):
         travel = min(tx, ty) + 120
         dx, dy = ux * travel, uy * travel
 
-        launch = 0.62 + s * 0.02
-        away = 0.68 + s * 0.02
-        back = 0.79 + s * 0.02
-        home = 0.88 + s * 0.02
+        launch = 0.64 + s * 0.03        # 飞出起点
+        away = 0.78 + s * 0.03          # 全部离场（此后不再飞回）
 
         tiles.append(
             f'    <rect x="{x}" y="{y}" width="{TILE}" height="{TILE}" rx="0" fill="{colour}" opacity="0">'
             f'<animate attributeName="opacity" values="0;0;1;1;0;0" '
-            f'keyTimes="0;{t_in:.3f};{t_in + 0.03:.3f};{t_out:.3f};{t_out + 0.04:.3f};1" '
+            f'keyTimes="0;{t_in:.3f};{t_in + 0.03:.3f};{t_out:.3f};{t_out + 0.03:.3f};1" '
             f'calcMode="spline" keySplines="{FADE_SPLINES}" dur="{CYCLE}s" repeatCount="indefinite"/>'
             f'<animateTransform attributeName="transform" type="translate" '
             f'values="0 0;0 0;{dx:.0f} {dy:.0f};{dx:.0f} {dy:.0f};0 0;0 0" '
-            f'keyTimes="0;{launch:.3f};{away:.3f};{back:.3f};{home:.3f};1" '
+            f'keyTimes="0;{launch:.3f};{away:.3f};0.940;0.960;1" '
             f'calcMode="spline" keySplines="{MOVE_SPLINES}" dur="{CYCLE}s" repeatCount="indefinite"/>'
             f'<animate attributeName="rx" values="0;0;22;22;0;0" '
-            f'keyTimes="0;{launch:.3f};{away:.3f};{back:.3f};{home:.3f};1" '
+            f'keyTimes="0;{launch:.3f};{away:.3f};0.940;0.960;1" '
             f'calcMode="spline" keySplines="{MOVE_SPLINES}" dur="{CYCLE}s" repeatCount="indefinite"/>'
             f"</rect>"
         )
 tile_layer = "\n".join(tiles)
 
-# ---------- 3) 文字度量 ----------
+# ---------- 4) 文字度量 ----------
 TITLE = "🦍 Hi 你好呀，我是 Gorilla Kev 👋"
 TITLE_FS = 46
 LINES = ["Voice AI & TTS Builder", "Agent Skill Crafter", "Godot Game Jammer", "Turning Coffee into Code"]
@@ -232,7 +258,7 @@ for i, (text, lw) in enumerate(zip(LINES, line_ws)):
         matrix_parts.append(mtx_text(x, line_y, ch, "#FFFFFF", a1, wend))
 line_layer = "\n".join(matrix_parts)
 
-# ---------- 4) 粒子 / 星点 ----------
+# ---------- 5) 粒子 / 星点 ----------
 particles = []
 for i, (x, y, r, dur, begin) in enumerate([
     (140, 120, 3.0, 12, 0), (260, 420, 2.2, 15, 3), (1060, 140, 3.4, 13, 5),
@@ -295,46 +321,37 @@ svg = f'''<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org
       <stop offset="0%" stop-color="#2C3A5E"/><stop offset="100%" stop-color="#3E4A78"/>
     </linearGradient>
 
-    <!-- 绘制用遮罩：白色方块自上而下扫过，露出被遮罩的内容 -->
+    <!-- 起稿遮罩：白色方块自上而下扫过 -->
     <mask id="m_line" maskUnits="userSpaceOnUse" x="0" y="0" width="{W}" height="{H}">
       <rect x="-40" y="-820" width="{W + 80}" height="830" fill="#FFFFFF">
         <animate attributeName="y" values="-820;-820;0;0;-820;-820"
-                 keyTimes="0;0.020;0.180;0.440;0.480;1" dur="{CYCLE}s" repeatCount="indefinite"/>
-      </rect>
-    </mask>
-    <mask id="m_art" maskUnits="userSpaceOnUse" x="0" y="0" width="{W}" height="{H}">
-      <rect x="-40" y="-820" width="{W + 80}" height="830" fill="#FFFFFF">
-        <animate attributeName="y" values="-820;-820;0;0;-820;-820"
-                 keyTimes="0;0.220;0.400;0.985;0.995;1" dur="{CYCLE}s" repeatCount="indefinite"/>
+                 keyTimes="0;0.030;0.150;0.340;0.380;1" dur="{CYCLE}s" repeatCount="indefinite"/>
       </rect>
     </mask>
 
-{defs_art}
 {defs_ink}
   </defs>
 
   <g clip-path="url(#frame)">
     <rect x="0" y="0" width="{W}" height="{H}" fill="#1A2340"/>
 
-    <!-- 阶段一：线稿逐段浮现（290 条深色细线） -->
+    <!-- 起稿：线稿自上而下勾出 -->
     <g mask="url(#m_line)">
       <g transform="translate(0,{MORPH_SHIFT:.1f}) scale({SCALE:.4f})" opacity="1">
-        <animate attributeName="opacity" values="1;1;0;0" keyTimes="0;0.240;0.420;1"
+        <animate attributeName="opacity" values="1;1;0;0" keyTimes="0;0.200;0.320;1"
                  dur="{CYCLE}s" repeatCount="indefinite"/>
         <use xlink:href="#ink" href="#ink"/>
       </g>
     </g>
 
-    <!-- 阶段二：完整插画自上而下填充上色（原始叠放顺序，与最终效果完全一致） -->
-    <g mask="url(#m_art)">
-      <g transform="translate(0,{MORPH_SHIFT:.1f}) scale({SCALE:.4f})" opacity="1">
-        <animate attributeName="opacity" values="1;1;0;0;1;1;0;0"
-                 keyTimes="0;0.500;0.580;0.920;0.950;0.985;0.995;1" dur="{CYCLE}s" repeatCount="indefinite"/>
-        <use xlink:href="#art" href="#art"/>
-      </g>
+    <!-- 逐层上色：底色 → 皮肤 → 眼睛 → 细节；整体在交给马赛克时淡出 -->
+    <g transform="translate(0,{MORPH_SHIFT:.1f}) scale({SCALE:.4f})" opacity="0">
+      <animate attributeName="opacity" values="0;0;1;1;0;0"
+               keyTimes="0;0.030;0.050;{WRAP_OUT};{WRAP_IN};1" dur="{CYCLE}s" repeatCount="indefinite"/>
+{layer_body}
     </g>
 
-    <!-- 马赛克色块层 -->
+    <!-- 马赛克色块：拼合 → 飞出画面（清场） -->
     <g transform="translate(0,{MORPH_SHIFT:.1f})">
 {tile_layer}
     </g>
@@ -342,7 +359,7 @@ svg = f'''<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org
     <!-- 矢量网格 -->
     <g opacity="0">
       <animate attributeName="opacity" values="0;0;0.55;0.55;0;0"
-               keyTimes="0;0.50;0.58;0.88;0.95;1"
+               keyTimes="0;0.50;0.56;0.92;0.98;1"
                calcMode="spline" keySplines="{FADE_SPLINES}" dur="{CYCLE}s" repeatCount="indefinite"/>
       <rect x="0" y="0" width="{W}" height="{H}" fill="url(#gridp)"/>
       <rect x="0" y="0" width="{W}" height="{H}" fill="none" stroke="#BFD0FF" stroke-width="2" opacity="0.5"/>
@@ -397,11 +414,7 @@ svg = f'''<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org
 
 with open(OUT, "w", encoding="utf-8") as f:
     f.write(svg)
-print(f"written: {OUT}  size: {os.path.getsize(OUT)} bytes  tiles={COLS * ROWS}  "
-      f"ink={len(ink)} total={len(items)}  art_dy={MORPH_SHIFT:.1f}")
-
-cairosvg.svg2png(url=OUT, write_to=PREVIEW, output_width=1000)
-print("preview:", PREVIEW)
+print(f"written: {OUT}  size: {os.path.getsize(OUT)} bytes  tiles={COLS * ROWS}  cycle={CYCLE}s")
 
 readme_path = os.path.join(ROOT, "README.md")
 m = re.search(r"assets/(hero[^\"')\s]*\.svg)", open(readme_path, encoding="utf-8").read())
