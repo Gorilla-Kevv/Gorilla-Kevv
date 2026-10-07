@@ -6,7 +6,7 @@ import xml.sax.saxutils as sx
 from PIL import Image, ImageFont
 
 SRC = r"C:\Users\kevin\Pictures\Screenshots\屏幕截图 2026-10-07 025751.png"
-OUT = r"f:\schoolCompWorks\clone\gtihubMainPagePro\assets\banner-stage-v4.svg"
+OUT = r"f:\schoolCompWorks\clone\gtihubMainPagePro\assets\banner-stage-v5.svg"
 
 W, H = 1200, 675
 
@@ -195,40 +195,42 @@ for i, (ch, cx) in enumerate(centers):
     )
 title_layer = "\n".join(title_chars)
 
-# ---------- 5) 打字机四句轮播（剪裁显字） ----------
-line_groups = []
-cursor_groups = []
-for i, (text, lw) in enumerate(zip(LINES, line_ws)):
-    s = i * SEG / CYCLE
-    kt = [f"{s + 0.0005:.4f}", f"{s + 0.09:.4f}", f"{s + 0.235:.4f}", f"{s + 0.2499:.4f}"]
-    if i == 0:
-        kt[0] = "0.0005"
-    esc = sx.escape(text)
-    line_groups.append(
-        f'      <g clip-path="url(#tl{i})" opacity="0">'
-        f'<animate attributeName="opacity" values="0;1;1;1;0;0" '
-        f'keyTimes="0;{kt[0]};{kt[1]};{kt[2]};{kt[3]};1" dur="{CYCLE}s" repeatCount="indefinite"/>'
-        f'<text x="{line_left:.1f}" y="{line_y}" filter="url(#tshadow)">{esc}</text>'
-        f'</g>'
-    )
-    cursor_groups.append(
-        f'      <rect x="{line_left:.1f}" y="{line_y - 20}" width="3" height="26" fill="#8FFFE4" opacity="0">'
-        f'<animate attributeName="opacity" values="0;0.9;0.9;0.9;0;0" '
-        f'keyTimes="0;{kt[0]};{kt[1]};{kt[2]};{kt[3]};1" dur="{CYCLE}s" repeatCount="indefinite"/>'
-        f'<animate attributeName="x" values="{line_left:.1f};{line_left:.1f};{line_left + lw:.1f};{line_left + lw:.1f};{line_left:.1f};{line_left:.1f}" '
-        f'keyTimes="0;{kt[0]};{kt[1]};{kt[2]};{kt[3]};1" dur="{CYCLE}s" repeatCount="indefinite"/>'
-        f'</rect>'
-    )
-line_layer = "\n".join(line_groups)
-cursor_layer = "\n".join(cursor_groups)
+# ---------- 5) 黑客帝国式乱码解码轮播 ----------
+MATRIX_CHARS = "01<>/#$%&@!?;:=+~^*ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+DECODE_VARIANTS = 4   # 每个字符位锁定前翻滚的乱码个数
 
-clip_defs = "\n".join(
-    f'    <clipPath id="tl{i}"><rect x="{line_left - 4:.1f}" y="{panel_y}" width="0" height="{panel_h}">'
-    f'<animate attributeName="width" values="0;0;{lw + 8:.0f};{lw + 8:.0f};0;0" '
-    f'keyTimes="0;{s + 0.0005:.4f};{s + 0.09:.4f};{s + 0.235:.4f};{s + 0.2499:.4f};1" dur="{CYCLE}s" repeatCount="indefinite"/>'
-    f'</rect></clipPath>'
-    for i, (s, lw) in enumerate(zip([i2 * SEG / CYCLE for i2 in range(len(LINES))], line_ws))
-)
+matrix_parts = []
+for i, (text, lw) in enumerate(zip(LINES, line_ws)):
+    n = len(text)
+    chw = lw / n
+    s = i * SEG / CYCLE                      # 本句窗口起点（占整轮比例）
+    wend = s + 0.235                         # 停留截止
+    wout = s + 0.2499                        # 淡出完成
+    for j, ch in enumerate(text):
+        if ch == " ":
+            continue
+        x = line_left + j * chw + chw / 2
+        esc = sx.escape(ch)
+        # 从左到右逐位锁定
+        tj = s + 0.06 + (j / max(n - 1, 1)) * 0.10
+        # 锁定前翻滚乱码
+        for k in range(DECODE_VARIANTS):
+            a = s + (tj - s) * k / DECODE_VARIANTS
+            b = s + (tj - s) * (k + 1) / DECODE_VARIANTS
+            g = MATRIX_CHARS[random.randrange(len(MATRIX_CHARS))]
+            matrix_parts.append(
+                f'      <text x="{x:.1f}" y="{line_y}" text-anchor="middle" fill="#5FD8A8" opacity="0">{sx.escape(g)}'
+                f'<animate attributeName="opacity" values="0;0.85;0;0" '
+                f'keyTimes="0;{a:.4f};{b:.4f};1" dur="{CYCLE}s" repeatCount="indefinite"/></text>'
+            )
+        # 锁定后的正确字符
+        matrix_parts.append(
+            f'      <text x="{x:.1f}" y="{line_y}" text-anchor="middle" fill="#FFFFFF" opacity="0">{esc}'
+            f'<animate attributeName="opacity" values="0;0;1;1;0;0" '
+            f'keyTimes="0;{tj:.4f};{tj + 0.002:.4f};{wend:.4f};{wout:.4f};1" dur="{CYCLE}s" repeatCount="indefinite"/></text>'
+        )
+line_layer = "\n".join(matrix_parts)
+cursor_layer = ""
 
 svg = f'''<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 {W} {H}" width="{W}" height="{H}" role="img" aria-label="stage banner">
   <defs>
@@ -254,7 +256,6 @@ svg = f'''<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org
       <stop offset="45%" stop-color="#FFB3C7"/>
       <stop offset="100%" stop-color="#B9A7FF"/>
     </linearGradient>
-{clip_defs}
 {"".join(chr(10) + "    " + f'<linearGradient id="cone{i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="{c}" stop-opacity="0.45"/><stop offset="45%" stop-color="{c}" stop-opacity="0.16"/><stop offset="100%" stop-color="{c}" stop-opacity="0"/></linearGradient>' for i, c in enumerate(BEAM_COLORS))}
   </defs>
 
@@ -287,11 +288,10 @@ svg = f'''<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org
 {title_layer}
     </g>
 
-    <!-- 打字机轮播 -->
-    <g font-family="Consolas,'JetBrains Mono','Courier New',monospace" font-size="{LINE_FS}" fill="#EAF9FF">
+    <!-- 黑客帝国式乱码解码轮播 -->
+    <g font-family="Consolas,'JetBrains Mono','Courier New',monospace" font-size="{LINE_FS}">
 {line_layer}
     </g>
-{cursor_layer}
 
 {bokeh}
 

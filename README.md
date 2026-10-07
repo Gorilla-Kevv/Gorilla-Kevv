@@ -2,8 +2,6 @@
 
 <img src="assets/banner-stage-v4.svg" width="100%" alt="banner"/>
 
-# 🦍 Hi 你好呀，我是 Gorilla Kev 👋
-
 <br/>
 
 <img src="https://img.shields.io/badge/%F0%9F%8E%89-Joined%202022-FF6B6B?style=for-the-badge&labelColor=FFD93D" alt="joined"/>
