@@ -6,9 +6,9 @@
 
 <img src="https://img.shields.io/badge/%F0%9F%94%A5-553%20Contributions%20(1y)-FF6B6B?style=for-the-badge&labelColor=FFD93D" alt="contributions"/>
 <img src="https://img.shields.io/badge/%F0%9F%8E%89-Joined%202022-FF6B6B?style=for-the-badge&labelColor=FFD93D" alt="joined"/>
-<img src="https://img.shields.io/badge/%F0%9F%93%A6-14%20Public%20Repos-4D96FF?style=for-the-badge&labelColor=A7D8FF" alt="repos"/>
-<img src="https://img.shields.io/badge/%E2%AD%90-15%20Stars-FFB627?style=for-the-badge&labelColor=FFE7A3" alt="stars"/>
-<img src="https://img.shields.io/badge/%F0%9F%91%A5-3%20Followers-6BCB77?style=for-the-badge&labelColor=B7F0B0" alt="followers"/>
+<img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.github.com%2Fusers%2FGorilla-Kevv&query=%24.public_repos&label=Public%20Repos&style=for-the-badge&color=4D96FF&labelColor=A7D8FF&logo=github&logoColor=white" alt="repos"/>
+<img src="https://img.shields.io/github/stars/Gorilla-Kevv?style=for-the-badge&label=Stars&color=FFB627&labelColor=FFE7A3&logo=github&logoColor=white" alt="stars"/>
+<img src="https://img.shields.io/github/followers/Gorilla-Kevv?style=for-the-badge&label=Followers&color=6BCB77&labelColor=B7F0B0&logo=github&logoColor=white" alt="followers"/>
 <img src="https://img.shields.io/badge/%F0%9F%92%AC-%E4%B8%AD%E6%96%87%20%2F%20English-9B72FF?style=for-the-badge&labelColor=D6C6FF" alt="lang"/>
 
 <br/><br/>
