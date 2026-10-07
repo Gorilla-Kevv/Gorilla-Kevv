@@ -4,6 +4,7 @@
 
 <br/>
 
+<img src="https://img.shields.io/badge/%F0%9F%94%A5-553%20Contributions%20(1y)-FF6B6B?style=for-the-badge&labelColor=FFD93D" alt="contributions"/>
 <img src="https://img.shields.io/badge/%F0%9F%8E%89-Joined%202022-FF6B6B?style=for-the-badge&labelColor=FFD93D" alt="joined"/>
 <img src="https://img.shields.io/badge/%F0%9F%93%A6-14%20Public%20Repos-4D96FF?style=for-the-badge&labelColor=A7D8FF" alt="repos"/>
 <img src="https://img.shields.io/badge/%E2%AD%90-15%20Stars-FFB627?style=for-the-badge&labelColor=FFE7A3" alt="stars"/>
@@ -65,7 +66,7 @@
 
 <div align="center">
 
-<img src="https://github-readme-stats.vercel.app/api?username=Gorilla-Kevv&show_icons=true&hide_title=false&hide_border=false&border_radius=20&bg_color=FFF8F0&border_color=FFD93D&title_color=FF6B6B&text_color=5A5A5A&icon_color=4D96FF" height="170" alt="stats"/>
+<img src="https://github-readme-stats.vercel.app/api?username=Gorilla-Kevv&show_icons=true&count_private=true&hide_title=false&hide_border=false&border_radius=20&bg_color=FFF8F0&border_color=FFD93D&title_color=FF6B6B&text_color=5A5A5A&icon_color=4D96FF" height="170" alt="stats"/>
 
 <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=Gorilla-Kevv&layout=compact&hide_border=false&border_radius=20&bg_color=FFF8F0&border_color=FFD93D&title_color=FF6B6B&text_color=5A5A5A" height="170" alt="top langs"/>
 

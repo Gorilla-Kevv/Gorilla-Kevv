@@ -22,7 +22,9 @@ jobs:
         uses: Platane/snk/svg-only@v3
         with:
           github_user_name: Gorilla-Kevv
-          outputs: dist/github-contribution-grid-snake.svg?palette=github-light&color_snake=FF6B6B&color_dots=FFE7A3,FFB6C9,A7D8FF,9BE89F,FFD93D
+          # 配 secret SNAKE_PAT（classic PAT，勾选 read:user + repo）后可包含私有仓库贡献；未配置时仅公开贡献
+          github_token: ${{ secrets.SNAKE_PAT || github.token }}
+          outputs: dist/github-contribution-grid-snake.svg?color_snake=40C463&color_dots=ebedf0,9be9a8,40c463,30a14e,216e39
 
       - name: Commit snake
         uses: stefanzweifel/git-auto-commit-action@v5
