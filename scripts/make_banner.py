@@ -6,7 +6,7 @@ import xml.sax.saxutils as sx
 from PIL import Image, ImageFont
 
 SRC = r"C:\Users\kevin\Pictures\Screenshots\屏幕截图 2026-10-07 025751.png"
-OUT = r"f:\schoolCompWorks\clone\gtihubMainPagePro\assets\banner-stage-v5.svg"
+OUT = r"f:\schoolCompWorks\clone\gtihubMainPagePro\assets\banner-stage-v6.svg"
 
 W, H = 1200, 675
 
@@ -195,42 +195,46 @@ for i, (ch, cx) in enumerate(centers):
     )
 title_layer = "\n".join(title_chars)
 
-# ---------- 5) 黑客帝国式乱码解码轮播 ----------
+# ---------- 5) 黑客帝国式乱码解码轮播（乱码→字符→隐藏→乱码→字符 循环） ----------
 MATRIX_CHARS = "01<>/#$%&@!?;:=+~^*ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-DECODE_VARIANTS = 4   # 每个字符位锁定前翻滚的乱码个数
+TICKS = 4              # 每轮乱码翻滚的字符个数
+
+
+def mtx_text(x: float, y: float, glyph: str, fill: str, t0: float, t1: float) -> str:
+    """在整轮周期 [t0, t1]（占比）内可见的字符元素"""
+    return (
+        f'      <text x="{x:.1f}" y="{y}" text-anchor="middle" fill="{fill}" opacity="0">{sx.escape(glyph)}'
+        f'<animate attributeName="opacity" values="0;0;1;1;0;0" '
+        f'keyTimes="0;{t0:.4f};{t0 + 0.002:.4f};{t1:.4f};{t1 + 0.002:.4f};1" dur="{CYCLE}s" repeatCount="indefinite"/></text>'
+    )
+
 
 matrix_parts = []
 for i, (text, lw) in enumerate(zip(LINES, line_ws)):
     n = len(text)
     chw = lw / n
-    s = i * SEG / CYCLE                      # 本句窗口起点（占整轮比例）
-    wend = s + 0.235                         # 停留截止
-    wout = s + 0.2499                        # 淡出完成
+    s = i * SEG / CYCLE          # 本句窗口起点（占整轮比例）
+    wend = s + 0.235             # 停留截止
+    wout = s + 0.2499            # 淡出完成
+    # 每句窗口内两轮循环：乱码 → 字符 → 隐藏 → 乱码 → 字符
+    r1_scr_start = s + 0.004                 # 0.04s 起第一轮乱码
+    r1_scr_end = s + 0.052                   # 乱码 0.46s
+    r1_ok_end = s + 0.140                    # 第一轮字符显示到 0.92s
+    blank_end = s + 0.150                    # 隐藏 0.1s
+    r2_scr_end = s + 0.202                   # 第二轮乱码 0.5s
     for j, ch in enumerate(text):
         if ch == " ":
             continue
         x = line_left + j * chw + chw / 2
-        esc = sx.escape(ch)
-        # 从左到右逐位锁定
-        tj = s + 0.06 + (j / max(n - 1, 1)) * 0.10
-        # 锁定前翻滚乱码
-        for k in range(DECODE_VARIANTS):
-            a = s + (tj - s) * k / DECODE_VARIANTS
-            b = s + (tj - s) * (k + 1) / DECODE_VARIANTS
-            g = MATRIX_CHARS[random.randrange(len(MATRIX_CHARS))]
-            matrix_parts.append(
-                f'      <text x="{x:.1f}" y="{line_y}" text-anchor="middle" fill="#5FD8A8" opacity="0">{sx.escape(g)}'
-                f'<animate attributeName="opacity" values="0;0.85;0;0" '
-                f'keyTimes="0;{a:.4f};{b:.4f};1" dur="{CYCLE}s" repeatCount="indefinite"/></text>'
-            )
-        # 锁定后的正确字符
-        matrix_parts.append(
-            f'      <text x="{x:.1f}" y="{line_y}" text-anchor="middle" fill="#FFFFFF" opacity="0">{esc}'
-            f'<animate attributeName="opacity" values="0;0;1;1;0;0" '
-            f'keyTimes="0;{tj:.4f};{tj + 0.002:.4f};{wend:.4f};{wout:.4f};1" dur="{CYCLE}s" repeatCount="indefinite"/></text>'
-        )
+        d = j * 0.0025           # 轻微左→右波浪错峰
+        for (a0, a1, ok_end) in ((r1_scr_start + d, r1_scr_end + d, r1_ok_end + d),
+                                 (s + 0.150 + d, r2_scr_end + d, wend)):
+            step = (a1 - a0) / TICKS
+            for k in range(TICKS):
+                g = MATRIX_CHARS[random.randrange(len(MATRIX_CHARS))]
+                matrix_parts.append(mtx_text(x, line_y, g, "#5FD8A8", a0 + k * step, a0 + (k + 1) * step))
+            matrix_parts.append(mtx_text(x, line_y, ch, "#FFFFFF", a1, ok_end))
 line_layer = "\n".join(matrix_parts)
-cursor_layer = ""
 
 svg = f'''<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 {W} {H}" width="{W}" height="{H}" role="img" aria-label="stage banner">
   <defs>
@@ -306,3 +310,17 @@ with open(OUT, "w", encoding="utf-8") as f:
     f.write(svg)
 print(f"written: {OUT}  size: {len(svg)} bytes")
 print(f"title_w={title_w:.0f}  line_w_max={line_w_max:.0f}  panel={panel_w:.0f}x{panel_h}")
+
+# 自检：README 中的横幅引用必须与本次输出文件名一致，否则图片会 404
+import os
+import re
+
+readme = os.path.join(os.path.dirname(OUT), "..", "README.md")
+if os.path.exists(readme):
+    m = re.search(r"assets/(banner[^\"')\s]+\.svg)", open(readme, encoding="utf-8").read())
+    ref = m.group(1) if m else None
+    want = os.path.basename(OUT)
+    if ref != want:
+        print(f"[WARN] README 引用的是 {ref}，但本次输出是 {want}，请同步修改 README！")
+    else:
+        print(f"[OK] README 引用一致: {ref}")
