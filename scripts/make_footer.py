@@ -1,3 +1,4 @@
+import math
 import os
 import re
 
@@ -5,40 +6,72 @@ import cairosvg
 
 ROOT = r"f:\schoolCompWorks\clone\gtihubMainPagePro"
 TRACED = os.path.join(ROOT, "build", "footer_traced_mid.svg")
-OUT = os.path.join(ROOT, "assets", "footer-v2.svg")
+OUT = os.path.join(ROOT, "assets", "footer-v3.svg")
 PREVIEW = os.path.join(ROOT, "build", "footer_final.png")
 
-W, H = 1200, 480
-ART_W, ART_H = 700, 377          # 900x485 等比缩放
-ART_X, ART_Y = (W - ART_W) // 2, 16   # 底部 393，波浪从 405 起，互不遮挡
-ART_CX, ART_CY = ART_X + ART_W / 2, ART_Y + ART_H / 2
+W, H = 1200, 700
+SRC_W, SRC_H = 900, 485
+ART_W, ART_H = W, round(W * SRC_H / SRC_W)   # 全宽铺满：1200 x 647
+ART_X, ART_Y = 0, 0
+SCALE = ART_W / SRC_W
 
-# 1) 取出描摹结果的内部图形
+# ---------- 1) 描摹图形：每条路径包进 <g>，按散列分配到 16 个动画组 ----------
 traced = open(TRACED, encoding="utf-8").read()
 inner = re.search(r"<svg[^>]*>(.*)</svg>", traced, re.S).group(1).strip()
-vb = re.search(r'viewBox="([^"]+)"', traced)
-print("traced viewBox:", vb.group(1) if vb else "none")
-src_w, src_h = 900, 485
-scale = ART_W / src_w
 
-# 2) 装饰粒子
+GROUPS = 16
+parts = inner.split("<path")
+grouped = [[] for _ in range(GROUPS)]
+for i, chunk in enumerate(parts[1:]):
+    path = "<path" + chunk.rstrip()
+    if not path.endswith("</path>"):
+        path = path.rstrip()          # 自闭合
+    gi = (i * 7) % GROUPS             # 散列，避免相邻色块同组
+    grouped[gi].append(path)
+
+art_groups = []
+for gi, paths in enumerate(grouped):
+    art_groups.append(f'          <g class="p{gi}">' + "".join(paths) + "</g>")
+art_body = "\n".join(art_groups)
+
+# ---------- 2) 聚散动画：每组的散开向量沿径向分布 ----------
+cycle = 10.0
+keyframes = []
+group_css = []
+for gi in range(GROUPS):
+    ang = gi * (2 * math.pi / GROUPS) + 0.35
+    radius = 34 + (gi % 5) * 12              # 34~82px
+    dx = math.cos(ang) * radius
+    dy = math.sin(ang) * radius * 0.72
+    delay = -0.12 * (gi % 6)
+    group_css.append(
+        f".p{gi}{{animation:sc{gi} {cycle}s cubic-bezier(.45,0,.55,1) infinite;animation-delay:{delay:.2f}s}}"
+    )
+    keyframes.append(
+        f"@keyframes sc{gi}{{"
+        f"0%,40%{{transform:translate(0,0)}}"
+        f"62%{{transform:translate({dx:.1f}px,{dy:.1f}px)}}"
+        f"82%,100%{{transform:translate(0,0)}}}}"
+    )
+
+# ---------- 3) 装饰粒子（配色跟随插画：蓝紫 + 粉） ----------
 particles = []
 for i, (x, y, r, dur, begin) in enumerate([
-    (120, 120, 3.0, 12, 0), (210, 300, 2.2, 15, 3), (1080, 150, 3.4, 13, 5),
-    (990, 330, 2.6, 16, 1), (150, 400, 2.4, 14, 7), (1120, 60, 2.8, 11, 9),
-    (60, 250, 2.0, 17, 4), (1150, 240, 2.2, 15, 6),
+    (140, 120, 3.0, 12, 0), (260, 470, 2.2, 15, 3), (1060, 140, 3.4, 13, 5),
+    (980, 430, 2.6, 16, 1), (180, 600, 2.4, 14, 7), (1120, 70, 2.8, 11, 9),
+    (70, 300, 2.0, 17, 4), (1140, 300, 2.2, 15, 6), (620, 90, 2.4, 13, 8),
 ]):
     particles.append(
-        f'<circle cx="{x}" cy="{y}" r="{r}" fill="{"#B9A7FF" if i % 2 else "#8FFFE4"}" opacity="0.8">'
-        f'<animate attributeName="cy" values="{y};{y - 46};{y}" dur="{dur}s" begin="-{begin}s" repeatCount="indefinite"/>'
-        f'<animate attributeName="opacity" values="0.1;0.85;0.1" dur="{dur / 3:.1f}s" begin="-{begin}s" repeatCount="indefinite"/>'
+        f'<circle cx="{x}" cy="{y}" r="{r}" fill="{"#B9A7FF" if i % 2 else "#9FB6FF"}" opacity="0.7">'
+        f'<animate attributeName="cy" values="{y};{y - 44};{y}" dur="{dur}s" begin="-{begin}s" repeatCount="indefinite"/>'
+        f'<animate attributeName="opacity" values="0.08;0.7;0.08" dur="{dur / 3:.1f}s" begin="-{begin}s" repeatCount="indefinite"/>'
         f"</circle>"
     )
 
 sparkles = []
 for i, (x, y, r, dur, begin) in enumerate([
-    (95, 90, 3.2, 3.2, 0), (320, 60, 2.4, 4.1, 0.9), (880, 70, 3.0, 3.6, 1.7),
-    (1120, 380, 2.6, 4.4, 0.4), (250, 380, 2.2, 3.9, 2.2), (1010, 90, 2.8, 3.4, 1.3),
+    (110, 90, 3.2, 3.2, 0), (330, 60, 2.4, 4.1, 0.9), (880, 80, 3.0, 3.6, 1.7),
+    (1110, 560, 2.6, 4.4, 0.4), (250, 560, 2.2, 3.9, 2.2), (1010, 100, 2.8, 3.4, 1.3),
 ]):
     sparkles.append(
         f'<circle cx="{x}" cy="{y}" r="{r}" fill="#FFFFFF">'
@@ -47,97 +80,97 @@ for i, (x, y, r, dur, begin) in enumerate([
     )
 
 svg = f'''<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 {W} {H}" width="{W}" height="{H}" role="img" aria-label="footer illustration">
+  <style>
+    {"".join(group_css)}
+    {"".join(keyframes)}
+  </style>
   <defs>
     <clipPath id="frame"><rect x="0" y="0" width="{W}" height="{H}" rx="22"/></clipPath>
-    <clipPath id="artclip"><rect x="{ART_X}" y="{ART_Y}" width="{ART_W}" height="{ART_H}" rx="20"/></clipPath>
-    <linearGradient id="bg" x1="0" y1="0" x2="0.3" y2="1">
-      <stop offset="0%" stop-color="#0B1F2A"/>
-      <stop offset="55%" stop-color="#123040"/>
-      <stop offset="100%" stop-color="#17394B"/>
-    </linearGradient>
+    <pattern id="gridp" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#BFD0FF" stroke-width="1" stroke-opacity="0.75"/>
+    </pattern>
     <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#8FFFE4"/>
+      <stop offset="0%" stop-color="#9FB6FF"/>
       <stop offset="50%" stop-color="#B9A7FF"/>
-      <stop offset="100%" stop-color="#FFB3C7"/>
+      <stop offset="100%" stop-color="#FFC9D8"/>
     </linearGradient>
     <linearGradient id="sweep" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0"/>
-      <stop offset="50%" stop-color="#FFFFFF" stop-opacity="0.18"/>
+      <stop offset="50%" stop-color="#FFFFFF" stop-opacity="0.16"/>
       <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
     </linearGradient>
-    <radialGradient id="glowT" cx="0.5" cy="0.5" r="0.5">
-      <stop offset="0%" stop-color="#8FFFE4" stop-opacity="0.22"/>
-      <stop offset="100%" stop-color="#8FFFE4" stop-opacity="0"/>
+    <radialGradient id="glowB" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#5B6FD8" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#5B6FD8" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="glowP" cx="0.5" cy="0.5" r="0.5">
-      <stop offset="0%" stop-color="#B9A7FF" stop-opacity="0.22"/>
-      <stop offset="100%" stop-color="#B9A7FF" stop-opacity="0"/>
+    <radialGradient id="glowV" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#8A6FD8" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#8A6FD8" stop-opacity="0"/>
     </radialGradient>
     <linearGradient id="w1" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#FF9AA2"/><stop offset="100%" stop-color="#FFB6C9"/>
+      <stop offset="0%" stop-color="#8FA6FF"/><stop offset="100%" stop-color="#A98BF0"/>
     </linearGradient>
     <linearGradient id="w2" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#FF6B6B"/><stop offset="100%" stop-color="#FF9F45"/>
+      <stop offset="0%" stop-color="#5B6FD8"/><stop offset="100%" stop-color="#7C6BD8"/>
     </linearGradient>
     <linearGradient id="w3" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#9B72FF"/><stop offset="100%" stop-color="#4D96FF"/>
+      <stop offset="0%" stop-color="#2C3A5E"/><stop offset="100%" stop-color="#3E4A78"/>
     </linearGradient>
-    <filter id="softglow" x="-40%" y="-40%" width="180%" height="180%">
-      <feGaussianBlur stdDeviation="16"/>
-    </filter>
-    <filter id="pblur" x="-80%" y="-80%" width="260%" height="260%">
-      <feGaussianBlur stdDeviation="1.4"/>
-    </filter>
   </defs>
 
   <g clip-path="url(#frame)">
-    <rect x="0" y="0" width="{W}" height="{H}" fill="url(#bg)"/>
+    <rect x="0" y="0" width="{W}" height="{H}" fill="#1A2340"/>
 
-    <ellipse cx="230" cy="150" rx="330" ry="220" fill="url(#glowT)"/>
-    <ellipse cx="980" cy="300" rx="330" ry="220" fill="url(#glowP)"/>
+    <!-- 全宽插画：376 条矢量路径，分 16 组做聚散动画 -->
+    <g transform="translate({ART_X},{ART_Y}) scale({SCALE:.4f})">
+{art_body}
+    </g>
 
-    <!-- 插画卡片 -->
-    <g>
-      <animateTransform attributeName="transform" type="translate" values="0 0; 0 -7; 0 0" dur="9s" repeatCount="indefinite"/>
-      <rect x="{ART_X - 3}" y="{ART_Y - 3}" width="{ART_W + 6}" height="{ART_H + 6}" rx="23"
-            fill="none" stroke="url(#ringGrad)" stroke-width="3" opacity="0.9"/>
-      <g filter="url(#softglow)" opacity="0.5">
-        <rect x="{ART_X}" y="{ART_Y}" width="{ART_W}" height="{ART_H}" rx="20" fill="#8FFFE4" opacity="0.18">
-          <animate attributeName="opacity" values="0.08;0.28;0.08" dur="5s" repeatCount="indefinite"/>
-        </rect>
-      </g>
-      <g clip-path="url(#artclip)">
-        <g transform="translate({ART_X},{ART_Y}) scale({scale:.4f})">
-{inner}
-        </g>
-        <!-- 掠过卡片的高光 -->
-        <g>
-          <animateTransform attributeName="transform" type="translate" values="-620 0; 760 0" dur="6.5s" repeatCount="indefinite"/>
-          <rect x="{ART_X - 260}" y="{ART_Y - 40}" width="240" height="{ART_H + 80}" fill="url(#sweep)" transform="skewX(-18)" style="mix-blend-mode:screen"/>
-        </g>
+    <!-- 矢量网格：散开时浮现，重组时淡出 -->
+    <g opacity="0">
+      <animate attributeName="opacity" values="0;0;0.5;0.5;0;0" keyTimes="0;0.40;0.60;0.78;0.90;1" dur="{cycle}s" repeatCount="indefinite"/>
+      <rect x="0" y="0" width="{W}" height="{H}" fill="url(#gridp)"/>
+      <rect x="0" y="0" width="{W}" height="{H}" fill="none" stroke="#BFD0FF" stroke-width="2" opacity="0.5"/>
+    </g>
+
+    <!-- 掠过的高光 -->
+    <g style="mix-blend-mode:screen">
+      <g>
+        <animateTransform attributeName="transform" type="translate" values="-520 0; 1320 0" dur="7.5s" repeatCount="indefinite"/>
+        <rect x="-160" y="-40" width="230" height="{H + 80}" fill="url(#sweep)" transform="skewX(-18)"/>
       </g>
     </g>
 
-    <!-- 底部波浪 -->
-    <path d="M0,414 C160,382 300,432 470,414 C640,396 760,438 940,414 C1060,398 1140,418 1200,406 L1200,{H} L0,{H} Z" fill="url(#w1)" opacity="0.85"/>
-    <path d="M0,436 C140,412 290,456 460,438 C630,420 750,456 920,436 C1050,421 1140,442 1200,428 L1200,{H} L0,{H} Z" fill="url(#w2)" opacity="0.92"/>
-    <path d="M0,458 C170,440 310,472 480,458 C650,444 780,472 950,458 C1080,446 1150,464 1200,452 L1200,{H} L0,{H} Z" fill="url(#w3)"/>
+    <!-- 底部波浪：取自插画的蓝紫配色 -->
+    <path d="M0,{H - 88} C160,{H - 116} 300,{H - 70} 470,{H - 88} C640,{H - 104} 760,{H - 66} 940,{H - 88} C1060,{H - 100} 1140,{H - 84} 1200,{H - 96} L1200,{H} L0,{H} Z" fill="url(#w1)" opacity="0.72"/>
+    <path d="M0,{H - 68} C140,{H - 88} 290,{H - 48} 460,{H - 66} C630,{H - 82} 750,{H - 50} 920,{H - 68} C1050,{H - 80} 1140,{H - 62} 1200,{H - 74} L1200,{H} L0,{H} Z" fill="url(#w2)" opacity="0.9"/>
+    <path d="M0,{H - 44} C170,{H - 62} 310,{H - 30} 480,{H - 42} C650,{H - 54} 780,{H - 30} 950,{H - 44} C1080,{H - 54} 1150,{H - 36} 1200,{H - 48} L1200,{H} L0,{H} Z" fill="url(#w3)"/>
 
+    <!-- 底部光晕 -->
+    <g style="mix-blend-mode:screen">
+      <ellipse cx="260" cy="{H - 60}" rx="360" ry="150" fill="url(#glowB)">
+        <animate attributeName="opacity" values="0.5;0.9;0.5" dur="6s" repeatCount="indefinite"/>
+      </ellipse>
+      <ellipse cx="950" cy="{H - 40}" rx="360" ry="150" fill="url(#glowV)">
+        <animate attributeName="opacity" values="0.9;0.5;0.9" dur="7s" repeatCount="indefinite"/>
+      </ellipse>
+    </g>
+
+    <g style="mix-blend-mode:screen">
 {"".join(sparkles)}
 {"".join(particles)}
+    </g>
   </g>
 </svg>
 '''
 
 with open(OUT, "w", encoding="utf-8") as f:
     f.write(svg)
-print(f"written: {OUT}  size: {os.path.getsize(OUT)} bytes")
+print(f"written: {OUT}  size: {os.path.getsize(OUT)} bytes  groups={GROUPS}")
 
-# 光栅化用于版式检查
 cairosvg.svg2png(url=OUT, write_to=PREVIEW, output_width=1000)
 print("preview:", PREVIEW)
 
-# README 引用自检
 readme_path = os.path.join(ROOT, "README.md")
 m = re.search(r"assets/(footer[^\"')\s]*\.svg)", open(readme_path, encoding="utf-8").read())
 ref = m.group(1) if m else None
