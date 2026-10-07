@@ -6,7 +6,7 @@ import xml.sax.saxutils as sx
 from PIL import Image, ImageFont
 
 SRC = r"C:\Users\kevin\Pictures\Screenshots\屏幕截图 2026-10-07 025751.png"
-OUT = r"f:\schoolCompWorks\clone\gtihubMainPagePro\assets\banner-stage-v3.svg"
+OUT = r"f:\schoolCompWorks\clone\gtihubMainPagePro\assets\banner-stage-v4.svg"
 
 W, H = 1200, 675
 
@@ -81,6 +81,7 @@ for ch in TITLE:
     centers.append((ch, cursor_x + w / 2))
     cursor_x += w
 title_w = cursor_x
+title_left = (W - title_w) / 2  # 整体居中（面板同样以画面中线对称）
 
 # 打字行几何
 line_ws = [mono_w(t, LINE_FS) for t in LINES]
@@ -187,7 +188,7 @@ title_chars = []
 for i, (ch, cx) in enumerate(centers):
     esc = sx.escape(ch)
     title_chars.append(
-        f'      <text x="{cx:.1f}" y="{title_y}" text-anchor="middle" opacity="0" filter="url(#tshadow)">{esc}'
+        f'      <text x="{title_left + cx:.1f}" y="{title_y}" text-anchor="middle" opacity="0" filter="url(#tshadow)">{esc}'
         f'<animate attributeName="opacity" values="0;1" dur="0.5s" begin="{i * 0.05:.2f}s" fill="freeze"/>'
         f'<animate attributeName="y" values="{title_y};{title_y - 5};{title_y}" dur="2.8s" begin="-{i * 0.13:.2f}s" repeatCount="indefinite"/>'
         f'</text>'
