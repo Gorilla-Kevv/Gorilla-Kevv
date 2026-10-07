@@ -5,13 +5,13 @@ import re
 import cairosvg
 
 ROOT = r"f:\schoolCompWorks\clone\gtihubMainPagePro"
-TRACED = os.path.join(ROOT, "build", "footer_traced_mid.svg")
-OUT = os.path.join(ROOT, "assets", "footer-v3.svg")
+TRACED = os.path.join(ROOT, "build", "footer_traced_final.svg")
+OUT = os.path.join(ROOT, "assets", "footer-v4.svg")
 PREVIEW = os.path.join(ROOT, "build", "footer_final.png")
 
-W, H = 1200, 700
-SRC_W, SRC_H = 900, 485
-ART_W, ART_H = W, round(W * SRC_H / SRC_W)   # 全宽铺满：1200 x 647
+W, H = 1200, 800
+SRC_W, SRC_H = 1420, 946                # 2 倍分辨率描摹源（裁切区 710x473）
+ART_W, ART_H = W, H                     # 全幅铺满，比例已对齐
 ART_X, ART_Y = 0, 0
 SCALE = ART_W / SRC_W
 
