@@ -12,9 +12,6 @@
 <img src="https://img.shields.io/badge/%F0%9F%92%AC-%E4%B8%AD%E6%96%87%20%2F%20English-9B72FF?style=for-the-badge&labelColor=D6C6FF" alt="lang"/>
 
 <br/><br/>
-
-<img src="assets/divider.svg" width="70%" alt="divider"/>
-
 </div>
 
 ## 🍬 关于我
