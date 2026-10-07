@@ -18,7 +18,7 @@ from PIL import Image, ImageFont
 ROOT = r"f:\schoolCompWorks\clone\gtihubMainPagePro"
 TRACED = os.path.join(ROOT, "build", "footer_traced_e3.svg")
 SRC_PNG = os.path.join(ROOT, "build", "footer_src_final.png")
-OUT = os.path.join(ROOT, "assets", "hero-illus-v10.svg")
+OUT = os.path.join(ROOT, "assets", "hero-illus-v11.svg")
 PREVIEW = os.path.join(ROOT, "build", "hero_final.png")
 
 W, H = 1200, 675
@@ -38,7 +38,8 @@ HOLD = "0 0 1 1"
 EASE_OUT = "0.34 0.02 0.18 1"           # 飞出：起手有冲劲，末段平滑收住
 FADE = "0.42 0 0.58 1"
 FALL_EASE = "0.5 0 0.9 0.45"            # 坠落：重力加速（缓慢起跳，越落越快）
-FALL_SPLINES = ";".join([HOLD, FALL_EASE, HOLD, HOLD, HOLD])
+# 位移/旋转/圆角只有 4 个 keyTimes（3 段）：静止 → 坠落 → 落定保持（无归位补间，故无回弹）
+FALL_SPLINES = ";".join([HOLD, FALL_EASE, HOLD])
 FADE_SPLINES = ";".join([HOLD, FADE, HOLD, FADE, HOLD])
 
 random.seed(7)
@@ -131,25 +132,25 @@ for row in range(ROWS):
         drift = random.uniform(-14, 14)
         spin = random.choice((-1, 1)) * random.uniform(18, 42)
 
-        # 位置复位放在全部坠落离场之后（此时已不可见）
-        RESET_A, RESET_B = 0.992, 0.999
-        kt = f"0;{peel:.3f};{landed:.3f};0.985;{RESET_A};1"
+        # 位移/旋转/圆角动画到终点即"冻结"：不再有归位补间，从根本上消除回弹。
+        # 循环重启时色块瞬时回到原位——此时透明度为 0（见下方 opacity 的收尾），肉眼不可见。
+        kt_fall = f"0;{peel:.3f};{landed:.3f};1"
         tiles.append(
             f'    <rect x="{x}" y="{y}" width="{TILE}" height="{TILE}" rx="0" fill="{colour}" opacity="0">'
             f'<animate attributeName="opacity" values="0;0;1;1;0;0" '
-            f'keyTimes="0;{t_in:.3f};{t_in + 0.03:.3f};0.985;{RESET_A};1" '
+            f'keyTimes="0;{t_in:.3f};{t_in + 0.03:.3f};0.978;0.986;1" '
             f'calcMode="spline" keySplines="{FADE_SPLINES}" dur="{CYCLE}s" repeatCount="indefinite"/>'
-            # 坠落：位移（重力加速曲线）
+            # 坠落：位移（重力加速曲线），落定后保持不动
             f'<animateTransform attributeName="transform" type="translate" '
-            f'values="0 0;0 0;{drift:.0f} {fall:.0f};{drift:.0f} {fall:.0f};0 0;0 0" '
-            f'keyTimes="{kt}" calcMode="spline" keySplines="{FALL_SPLINES}" dur="{CYCLE}s" repeatCount="indefinite"/>'
-            # 翻身：绕瓦片自身中心旋转（additive 叠加在位移之上）
+            f'values="0 0;0 0;{drift:.0f} {fall:.0f};{drift:.0f} {fall:.0f}" '
+            f'keyTimes="{kt_fall}" calcMode="spline" keySplines="{FALL_SPLINES}" dur="{CYCLE}s" repeatCount="indefinite"/>'
+            # 翻身：绕瓦片自身中心旋转（additive 叠加在位移之上），落定后保持角度
             f'<animateTransform attributeName="transform" type="rotate" additive="sum" '
             f'values="0 {ccx:.0f} {ccy:.0f};0 {ccx:.0f} {ccy:.0f};{spin:.1f} {ccx:.0f} {ccy:.0f};'
-            f'{spin:.1f} {ccx:.0f} {ccy:.0f};0 {ccx:.0f} {ccy:.0f};0 {ccx:.0f} {ccy:.0f}" '
-            f'keyTimes="{kt}" calcMode="spline" keySplines="{FALL_SPLINES}" dur="{CYCLE}s" repeatCount="indefinite"/>'
-            f'<animate attributeName="rx" values="0;0;{TILE_R};{TILE_R};0;0" '
-            f'keyTimes="{kt}" calcMode="spline" keySplines="{FALL_SPLINES}" dur="{CYCLE}s" repeatCount="indefinite"/>'
+            f'{spin:.1f} {ccx:.0f} {ccy:.0f}" '
+            f'keyTimes="{kt_fall}" calcMode="spline" keySplines="{FALL_SPLINES}" dur="{CYCLE}s" repeatCount="indefinite"/>'
+            f'<animate attributeName="rx" values="0;0;{TILE_R};{TILE_R}" '
+            f'keyTimes="{kt_fall}" calcMode="spline" keySplines="{FALL_SPLINES}" dur="{CYCLE}s" repeatCount="indefinite"/>'
             f"</rect>"
         )
 tile_layer = "\n".join(tiles)
