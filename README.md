@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/banner-stage-v6.svg" width="100%" alt="banner"/>
+<img src="assets/hero-illus-v1.svg" width="100%" alt="hero illustration"/>
 
 <br/>
 
@@ -164,7 +164,7 @@
 
 <br/>
 
-<img src="assets/footer-v5.svg" width="100%" alt="footer"/>
+<img src="assets/footer-stage-v1.svg" width="100%" alt="stage footer"/>
 
 <div align="center">
 
