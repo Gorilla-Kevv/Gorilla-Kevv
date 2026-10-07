@@ -18,6 +18,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Debug token visibility
+        run: |
+          RESP=$(curl -s -X POST https://api.github.com/graphql \
+            -H "Authorization: bearer ${{ secrets.SNAKE_PAT }}" \
+            -H "Content-Type: application/json" \
+            -d '{"query":"query{viewer{login} user(login:\"Gorilla-Kevv\"){contributionsCollection{contributionCalendar{totalContributions}}}}"}')
+          echo "API response: $RESP"
+
       - name: Generate snake
         uses: Platane/snk/svg-only@v3
         with:
