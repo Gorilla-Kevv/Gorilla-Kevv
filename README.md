@@ -164,7 +164,7 @@
 
 <br/>
 
-<img src="assets/footer.svg" width="100%" alt="footer"/>
+<img src="assets/footer-v2.svg" width="100%" alt="footer"/>
 
 <div align="center">
 
