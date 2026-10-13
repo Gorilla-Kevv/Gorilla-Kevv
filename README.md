@@ -14,48 +14,20 @@
 <br/><br/>
 </div>
 
-## 🍬 关于我
+## 关于我
 
-> 一个喜欢把想法又快又好玩地做出来的开发者 ☕
+> 一个喜欢把想法又快又好玩地做出来的开发者 
 > 主要折腾 **AI 应用**、**Agent 技能** 和 **小游戏**，也爱写点让日常更省事的小工具。
 
-- 🎙️ **语音 & AI 应用** — 做过 MiMo TTS 音色工坊、GPT-SoVITS 本地语音工作台，音频与语料不出本机
-- 🛠️ **Agent Skill 工匠** — 写过综测计分、论文格式化、磁盘清理、聊天记录分析等一系列可复用技能
-- 🎮 **游戏开发** — 用 Godot / GDScript 参加 GGJ 2026，做过完整的小游戏原型
-- 📱 **移动端** — Kotlin 写过 Android 插件，喜欢折腾逆向与抓包小工具
-- 🎨 **可视化 & 前端** — ECharts Markdown 阅读器、AI 生图科普站
-- 🎧 **音乐 & 视频** — 网易云音乐人 [歌瑞沫拉菌](https://music.163.com/#/artist?id=49513294)，做 Bootleg / Remix；B 站 [Gorilla_Kev](https://space.bilibili.com/182698016) 随缘更新
-- 🌱 **正在学** — 更多模型推理优化、更顺手的自动化工作流
+-  **语音 & AI 应用** — 做过 MiMo TTS 音色工坊、GPT-SoVITS 本地语音工作台，音频与语料不出本机
+-  **Agent Skill 工匠** — 写过综测计分、论文格式化、磁盘清理、聊天记录分析等一系列可复用技能
+-  **游戏开发** — 用 Godot / GDScript 参加 GGJ 2026，做过完整的小游戏原型
+-  **移动端** — Kotlin 写过 Android 插件，喜欢折腾逆向与抓包小工具
+-  **可视化 & 前端** — ECharts Markdown 阅读器、AI 生图科普站
+-  **音乐 & 视频** — 网易云音乐人 [歌瑞沫拉菌](https://music.163.com/#/artist?id=49513294)，做 Bootleg / Remix；B 站 [Gorilla_Kev](https://space.bilibili.com/182698016) 随缘更新
+-  **正在学** — 更多模型推理优化、更顺手的自动化工作流
 
 <!-- 💡 想改自我介绍？直接改上面的 emoji 列表；想加联系方式就往「来找我玩」里加一行 -->
-
-<br/>
-
-## 🧰 技能工具箱
-
-<div align="center">
-
-**Languages**
-
-<img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white"/>
-<img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white"/>
-<img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black"/>
-<img src="https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white"/>
-<img src="https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white"/>
-<img src="https://img.shields.io/badge/Kotlin-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white"/>
-
-**Tools & Toys**
-
-<img src="https://img.shields.io/badge/Godot-478CBF?style=for-the-badge&logo=godotengine&logoColor=white"/>
-<img src="https://img.shields.io/badge/GDScript-478CBF?style=for-the-badge&logo=godotengine&logoColor=white"/>
-<img src="https://img.shields.io/badge/Node.js-5FA04E?style=for-the-badge&logo=nodedotjs&logoColor=white"/>
-<img src="https://img.shields.io/badge/Electron-47848F?style=for-the-badge&logo=electron&logoColor=white"/>
-<img src="https://img.shields.io/badge/ECharts-C1232F?style=for-the-badge&logo=apacheecharts&logoColor=white"/>
-<img src="https://img.shields.io/badge/PowerShell-5391FE?style=for-the-badge&logo=powershell&logoColor=white"/>
-<img src="https://img.shields.io/badge/Git-F05032?style=for-the-badge&logo=git&logoColor=white"/>
-<img src="https://img.shields.io/badge/VS%20Code-007ACC?style=for-the-badge&logo=visualstudiocode&logoColor=white"/>
-
-</div>
 
 <br/>
 
@@ -100,22 +72,22 @@
 </div>
 
 <details>
-<summary>🧺 <b>还有这些小玩意儿</b>（点开看看）</summary>
+<summary> <b>还有这些小玩意儿</b>（点开看看）</summary>
 
 <br/>
 
-- 🧹 **[c-disk-cleaner-pro](https://github.com/Gorilla-Kevv/c-disk-cleaner-pro)** — Windows C 盘安全清理与迁移技能（`PowerShell`）
-- 💽 **[data-disk-cleaner](https://github.com/Gorilla-Kevv/data-disk-cleaner)** — 数据盘清理：构建垃圾识别 / 虚拟机磁盘保护（`PowerShell`）
-- 💭 **[chat-record-analysis-skill](https://github.com/Gorilla-Kevv/chat-record-analysis-skill)** — 微信聊天记录分析技能（`⭐ 2`）
-- 🔍 **[scnu-syntheses-evaluation-review](https://github.com/Gorilla-Kevv/scnu-syntheses-evaluation-review)** — 综测登记表审核与批注（`Python`）
-- 📲 **[mobileSrcDownloadplugin](https://github.com/Gorilla-Kevv/mobileSrcDownloadplugin)** — 移动端源码下载插件（`Kotlin`）
-- 🐍 **[Akasha-WeChat](https://github.com/Gorilla-Kevv/Akasha-WeChat)** — 微信相关小工具（`Python` · `⭐ 1`）
+-  **[c-disk-cleaner-pro](https://github.com/Gorilla-Kevv/c-disk-cleaner-pro)** — Windows C 盘安全清理与迁移技能（`PowerShell`）
+-  **[data-disk-cleaner](https://github.com/Gorilla-Kevv/data-disk-cleaner)** — 数据盘清理：构建垃圾识别 / 虚拟机磁盘保护（`PowerShell`）
+-  **[chat-record-analysis-skill](https://github.com/Gorilla-Kevv/chat-record-analysis-skill)** — 微信聊天记录分析技能（`⭐ 2`）
+-  **[scnu-syntheses-evaluation-review](https://github.com/Gorilla-Kevv/scnu-syntheses-evaluation-review)** — 综测登记表审核与批注（`Python`）
+-  **[mobileSrcDownloadplugin](https://github.com/Gorilla-Kevv/mobileSrcDownloadplugin)** — 移动端源码下载插件（`Kotlin`）
+-  **[Akasha-WeChat](https://github.com/Gorilla-Kevv/Akasha-WeChat)** — 微信相关小工具（`Python` · `⭐ 1`）
 
 </details>
 
 <br/>
 
-## 🎬 除了代码之外
+##  除了代码之外
 
 <div align="center">
 
@@ -130,7 +102,7 @@
 
 <br/>
 
-## 🐍 贡献足迹
+##  贡献足迹
 
 <div align="center">
 
@@ -147,7 +119,5 @@
 <img src="assets/footer-stage-v2.svg" width="100%" alt="stage footer with contact links"/>
 
 <div align="center">
-
-<sub>用 ☕ 和 ♥ 一点点搭起来的主页 · 2022 - 至今</sub>
 
 </div>
