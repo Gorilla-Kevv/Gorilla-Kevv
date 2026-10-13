@@ -113,7 +113,7 @@
 
 <br/>
 
-<img src="assets/footer-stage-v2.svg" width="100%" alt="stage footer with contact links"/>
+<img src="assets/footer-stage-v3.svg" width="100%" alt="stage footer with contact links"/>
 
 <div align="center">
 

@@ -5,12 +5,14 @@
 """
 import base64
 import io
+import json
 import random
+import subprocess
 
 from PIL import Image, ImageFont
 
 SRC = r"C:\Users\kevin\Pictures\Screenshots\屏幕截图 2026-10-07 025751.png"
-OUT = r"f:\schoolCompWorks\clone\gtihubMainPagePro\assets\footer-stage-v2.svg"
+OUT = r"f:\schoolCompWorks\clone\gtihubMainPagePro\assets\footer-stage-v3.svg"
 
 W, H = 1200, 520                     # 高度由 800 缩到 520，占用更小
 
@@ -149,6 +151,101 @@ for i in range(3):
     )
 streaks = "\n".join(streaks)
 
+# ---------- 3.5) 年度活动曲线（复刻自参考截图：深底面板 + 品红尖峰折线） ----------
+CAL_QUERY = ("query($login:String!){user(login:$login){contributionsCollection{"
+             "contributionCalendar{weeks{contributionDays{date contributionCount}}}}}}")
+
+# gh 不可用时的内置快照（生成于 2026-10-13，367 天）
+FALLBACK_COUNTS = [
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 3, 0, 2, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
+    0, 0, 0, 0, 5, 14, 3, 61, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 9, 0, 0, 0, 5, 9, 21,
+    13, 5, 1, 21, 10, 25, 0, 5, 13, 20, 58, 29, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 3, 8, 0, 1, 4,
+    0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 1, 10, 6, 3, 0, 20, 18, 18, 4, 0, 3, 3, 3, 0, 4,
+    22, 79, 4, 1, 11, 1, 8, 8,
+]
+
+
+def fetch_counts() -> list:
+    """优先实时拉取逐日贡献，失败则回退内置快照"""
+    try:
+        r = subprocess.run(
+            ["gh", "api", "graphql", "-F", "login=Gorilla-Kevv", "-f", f"query={CAL_QUERY}"],
+            capture_output=True, text=True, encoding="utf-8", timeout=45,
+        )
+        cal = json.loads(r.stdout)["data"]["user"]["contributionsCollection"]["contributionCalendar"]
+        days = [d["contributionCount"] for w in cal["weeks"] for d in w["contributionDays"]]
+        if len(days) < 300:
+            raise ValueError(f"calendar too short: {len(days)}")
+        print(f"curve data: LIVE gh api  ({len(days)} days, {sum(days)} contributions)")
+        return days
+    except Exception as e:                                    # noqa: BLE001
+        print(f"[WARN] gh 实时拉取失败，使用内置快照: {e}")
+        return FALLBACK_COUNTS
+
+
+counts = fetch_counts()
+CUR_TOTAL = sum(counts)
+CUR_MAX = max(counts) or 1
+
+# 几何：面板横贯顶部无文字区
+CP_X, CP_Y, CP_W, CP_H = 24, 14, W - 48, 132
+C_X0, C_X1 = CP_X + 20, CP_X + CP_W - 20
+C_BASE, C_MAXH = CP_Y + 122, 74
+step = (C_X1 - C_X0) / max(len(counts) - 1, 1)
+
+
+def cy(c: int) -> float:
+    """幂缩放：小数值也能看出起伏（0.55 次方），峰值顶满"""
+    return C_BASE - (c / CUR_MAX) ** 0.55 * C_MAXH
+
+
+pts = [(C_X0 + i * step, cy(c)) for i, c in enumerate(counts)]
+d_line = "M" + " L".join(f"{x:.1f},{y:.1f}" for x, y in pts)
+d_fill = d_line + f" L{C_X1:.1f},{C_BASE} L{C_X0:.1f},{C_BASE} Z"
+peak_i = counts.index(CUR_MAX)
+pk_x, pk_y = pts[peak_i]
+
+DRAW_DUR = 3.2
+curve_parts = [
+    # 面板底
+    f'    <rect x="{CP_X}" y="{CP_Y}" width="{CP_W}" height="{CP_H}" rx="16" fill="#070B14" opacity="0.68" stroke="#FFFFFF" stroke-opacity="0.09"/>',
+    # 标题行 + 总数 + 细分隔线（对应截图的「年度活动曲线：」与横线）
+    f'    <text x="{CP_X + 20}" y="{CP_Y + 30}" fill="#F4F7FB" font-size="21" font-weight="bold" '
+    f'font-family="\'Microsoft YaHei\',\'PingFang SC\',sans-serif" filter="url(#tshadow)">年度活动曲线'
+    f'<tspan fill="#FF7FBC" font-size="15" font-weight="normal" dx="10">近一年 {CUR_TOTAL} 次 · 峰值 {CUR_MAX}/天</tspan></text>',
+    f'    <line x1="{CP_X + 20}" y1="{CP_Y + 40}" x2="{CP_X + CP_W - 20}" y2="{CP_Y + 40}" stroke="#FFFFFF" stroke-opacity="0.10"/>',
+    # 曲线下方渐隐填充（画完后淡入）
+    f'    <path d="{d_fill}" fill="url(#curveFill)" opacity="0">'
+    f'<animate attributeName="opacity" values="0;0;0.2" keyTimes="0;{0.4 + DRAW_DUR / 10:.2f};{0.4 + DRAW_DUR / 10 + 0.1:.2f}" '
+    f'dur="10s" repeatCount="indefinite"/></path>',
+    # 发光底层
+    f'    <path d="{d_line}" fill="none" stroke="#FF5CA8" stroke-width="7" stroke-linejoin="round" '
+    f'stroke-opacity="0.35" filter="url(#glow)" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1">'
+    f'<animate attributeName="stroke-dashoffset" values="1;0" begin="0.4s" dur="{DRAW_DUR}s" fill="freeze" '
+    f'calcMode="spline" keySplines="0.3 0 0.2 1"/></path>',
+    # 主线（自左向右描画，画完定格）
+    f'    <path id="actCurve" d="{d_line}" fill="none" stroke="#FF5CA8" stroke-width="2.4" stroke-linejoin="round" '
+    f'pathLength="1" stroke-dasharray="1" stroke-dashoffset="1">'
+    f'<animate attributeName="stroke-dashoffset" values="1;0" begin="0.4s" dur="{DRAW_DUR}s" fill="freeze" '
+    f'calcMode="spline" keySplines="0.3 0 0.2 1"/></path>',
+    # 峰值呼吸点
+    f'    <circle cx="{pk_x:.1f}" cy="{pk_y:.1f}" r="3" fill="#FFD7EC" opacity="0">'
+    f'<animate attributeName="opacity" values="0;0;0.95;0.45;0.95" '
+    f'keyTimes="0;{0.4 + DRAW_DUR / 10:.2f};{0.4 + DRAW_DUR / 10 + 0.05:.2f};0.97;1" dur="10s" repeatCount="indefinite"/></circle>',
+    # 巡游光点：沿曲线循环滑行
+    f'    <circle cx="{C_X0:.1f}" cy="{C_BASE}" r="3.6" fill="#FFE3F1" filter="url(#glow)" opacity="0">'
+    f'<animateMotion dur="9s" begin="3.6s" repeatCount="indefinite"><mpath xlink:href="#actCurve"/></animateMotion>'
+    f'<animate attributeName="opacity" values="0;0.95;0.95;0" keyTimes="0;0.05;0.92;1" dur="9s" begin="3.6s" repeatCount="indefinite"/></circle>',
+]
+curve_layer = "\n".join(curve_parts)
+
 # ---------- 4) 联系面板 ----------
 HEAD = "来找我玩"
 HEAD_FS = 38
@@ -255,6 +352,11 @@ svg = f'''<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org
     <filter id="tshadow" x="-40%" y="-40%" width="180%" height="180%">
       <feDropShadow dx="0" dy="2" stdDeviation="3.4" flood-color="#04121C" flood-opacity="0.9"/>
     </filter>
+    <filter id="glow" x="-120%" y="-120%" width="340%" height="340%"><feGaussianBlur stdDeviation="3.2"/></filter>
+    <linearGradient id="curveFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FF5CA8" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#FF5CA8" stop-opacity="0"/>
+    </linearGradient>
     <linearGradient id="pulseGrad" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#7FFFE0" stop-opacity="0.9"/>
       <stop offset="50%" stop-color="#B9A7FF" stop-opacity="0.6"/>
@@ -292,6 +394,9 @@ svg = f'''<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org
     <rect x="0" y="0" width="{W}" height="{H}" fill="url(#pulseGrad)" opacity="0" style="mix-blend-mode:screen">
       <animate attributeName="opacity" values="0;0.05;0.14;0.04;0.09;0" dur="4.8s" repeatCount="indefinite"/>
     </rect>
+
+    <!-- 年度活动曲线面板 -->
+{curve_layer}
 
     <!-- 文字区压暗，保证可读性 -->
     <rect x="0" y="150" width="{W}" height="{H - 150}" fill="url(#scrim)"/>
