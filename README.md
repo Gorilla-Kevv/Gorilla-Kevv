@@ -31,7 +31,7 @@
 
 <br/>
 
-## 📊 我的 GitHub 数据
+##  我的 GitHub 数据
 
 <div align="center">
 
@@ -45,29 +45,29 @@
 
 <br/>
 
-## 🍭 精选项目
+##  精选项目
 
 <div align="center">
 
-| 🎙️ **voice-workbench** | 🍌 **ai-painting-atlas** |
+|  **voice-workbench** |  **ai-painting-atlas** |
 | :--- | :--- |
 | 本地语音工作台：MiMo 云端 TTS + GPT-SoVITS 本地推理 / 训练 / 批量合成 | 面向零基础小白的 AI 生图硬核科普知识体系网站 |
-| `TypeScript` · ⭐ 1 · [去看看 →](https://github.com/Gorilla-Kevv/voice-workbench) | `JavaScript` · [去看看 →](https://github.com/Gorilla-Kevv/ai-painting-atlas) |
+| `TypeScript` ·  · [去看看 →](https://github.com/Gorilla-Kevv/voice-workbench) | `JavaScript` · [去看看 →](https://github.com/Gorilla-Kevv/ai-painting-atlas) |
 
-| 📝 **scnu-syntheses-score-filling** | 🎮 **ggj-2026** |
+|  **scnu-syntheses-score-filling** |  **ggj-2026** |
 | :--- | :--- |
 | 依据高校综测实施细则，把佐证材料自动计分并填入登记表 | 椰社 2026 —— Global Game Jam 参赛作品 |
-| `Python` · ⭐ 3 · [去看看 →](https://github.com/Gorilla-Kevv/scnu-syntheses-score-filling) | `GDScript` · ⭐ 2 · [去看看 →](https://github.com/Gorilla-Kevv/ggj-2026) |
+| `Python` ·  · [去看看 →](https://github.com/Gorilla-Kevv/scnu-syntheses-score-filling) | `GDScript` ·  · [去看看 →](https://github.com/Gorilla-Kevv/ggj-2026) |
 
-| 🔊 **mimo-voice-studio** | 💬 **ciphertalk_open** |
+|  **mimo-voice-studio** |  **ciphertalk_open** |
 | :--- | :--- |
 | 基于 MiMo-V2.5-TTS 的语音合成 / 音色设计 / 声音克隆（静态直连版） | 微信聊天数据开放工具链 |
-| `HTML` · ⭐ 1 · [去看看 →](https://github.com/Gorilla-Kevv/mimo-voice-studio) | `TypeScript` · ⭐ 2 · [去看看 →](https://github.com/Gorilla-Kevv/ciphertalk_open) |
+| `HTML` · · [去看看 →](https://github.com/Gorilla-Kevv/mimo-voice-studio) | `TypeScript` ·  · [去看看 →](https://github.com/Gorilla-Kevv/ciphertalk_open) |
 
-| 📄 **scnu-thesis-formatter** | 📈 **md-echarts-reader** |
+|  **scnu-thesis-formatter** |  **md-echarts-reader** |
 | :--- | :--- |
 | 本科毕业论文格式改写 + matplotlib 数据可视化 | 通用 Markdown 阅读器：ECharts 代码块渲染成交互图表 |
-| `Python` · ⭐ 2 · [去看看 →](https://github.com/Gorilla-Kevv/scnu-thesis-formatter) | `JavaScript` · ⭐ 1 · [去看看 →](https://github.com/Gorilla-Kevv/md-echarts-reader) |
+| `Python` ·  · [去看看 →](https://github.com/Gorilla-Kevv/scnu-thesis-formatter) | `JavaScript` ·  · [去看看 →](https://github.com/Gorilla-Kevv/md-echarts-reader) |
 
 </div>
 
